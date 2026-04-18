@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
+import { jsPDF } from 'jspdf';
 
 interface Customer {
   id: string;
