@@ -1,4 +1,5 @@
 'use client';
+// synced via assistant 2026-04-18 15:50
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
@@ -150,8 +151,7 @@ export default function FacturenPage() {
 ***REMOVED***  return;
 ***REMOVED***}
 
-***REMOVED***// Valideer en prepareer regels zodat ze binnen numeric(12,2) vallen
-***REMOVED***const maxAmount = 9999999999.99; // komt overeen met numeric(12,2)
+***REMOVED***const maxAmount = 9999999999.99; // numeric(12,2)
 ***REMOVED***let totalExclLocal = 0;
 ***REMOVED***const parsedLines = form.lines.map((line) => {
 ***REMOVED***  const quantity = Number(line.quantity.replace(',', '.')) || 0;
@@ -182,14 +182,6 @@ export default function FacturenPage() {
 ***REMOVED***const vat = Number(form.vatRate) || 0;
 ***REMOVED***const totalInclLocal = totalExclLocal * (1 + vat / 100);
 
-***REMOVED***const linePayload = parsedLines.map(({ line, quantity, unitPrice, amount }) => ({
-***REMOVED***  invoice_id: editingId ?? undefined,
-***REMOVED***  description: line.description,
-***REMOVED***  quantity,
-***REMOVED***  unit_price: unitPrice,
-***REMOVED***  amount_excl: amount,
-***REMOVED***}));
-
 ***REMOVED***try {
 ***REMOVED***  if (!editingId) {
 ***REMOVED******REMOVED***const { data: inserted, error: invError } = await supabase
@@ -213,9 +205,12 @@ export default function FacturenPage() {
 
 ***REMOVED******REMOVED***const invoiceId = inserted.id as string;
 
-***REMOVED******REMOVED***const payloadWithInvoice = linePayload.map((p) => ({
-***REMOVED******REMOVED***  ...p,
+***REMOVED******REMOVED***const payloadWithInvoice = parsedLines.map(({ line, quantity, unitPrice, amount }) => ({
 ***REMOVED******REMOVED***  invoice_id: invoiceId,
+***REMOVED******REMOVED***  description: line.description,
+***REMOVED******REMOVED***  quantity,
+***REMOVED******REMOVED***  unit_price: unitPrice,
+***REMOVED******REMOVED***  amount_excl: amount,
 ***REMOVED******REMOVED***}));
 
 ***REMOVED******REMOVED***if (payloadWithInvoice.length > 0) {
@@ -249,9 +244,12 @@ export default function FacturenPage() {
 
 ***REMOVED******REMOVED***await supabase.from('invoice_lines').delete().eq('invoice_id', editingId);
 
-***REMOVED******REMOVED***const payloadWithInvoice = linePayload.map((p) => ({
-***REMOVED******REMOVED***  ...p,
+***REMOVED******REMOVED***const payloadWithInvoice = parsedLines.map(({ line, quantity, unitPrice, amount }) => ({
 ***REMOVED******REMOVED***  invoice_id: editingId,
+***REMOVED******REMOVED***  description: line.description,
+***REMOVED******REMOVED***  quantity,
+***REMOVED******REMOVED***  unit_price: unitPrice,
+***REMOVED******REMOVED***  amount_excl: amount,
 ***REMOVED******REMOVED***}));
 
 ***REMOVED******REMOVED***if (payloadWithInvoice.length > 0) {
@@ -629,20 +627,14 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex flex-col items-end gap-1 text-[11px] text-muted md:flex-row md:justify-end md:gap-4">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Subtotaal:</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="font-mono font-medium text-text"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  style={{ fontVariantNumeric: 'tabular-nums' }}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalExclLocalDisplay(formTotals.totalExcl)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalExclLocal.toFixed(2)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Totaal incl. btw:</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="font-mono font-medium text-text"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  style={{ fontVariantNumeric: 'tabular-nums' }}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalExclLocalDisplay(formTotals.totalIncl)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalInclLocal.toFixed(2)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
@@ -705,9 +697,4 @@ export default function FacturenPage() {
 ***REMOVED***  )}
 ***REMOVED***</div>
   );
-}
-
-function totalExclLocalDisplay(value: number): string {
-  if (!Number.isFinite(value)) return '0.00';
-  return value.toFixed(2);
 }
