@@ -1,0 +1,27 @@
+{
+  "name": "fiscaliq-web",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+***REMOVED***"dev": "next dev",
+***REMOVED***"build": "next build",
+***REMOVED***"start": "next start",
+***REMOVED***"lint": "next lint"
+  },
+  "dependencies": {
+***REMOVED***"next": "14.2.5",
+***REMOVED***"react": "18.3.1",
+***REMOVED***"react-dom": "18.3.1"
+  },
+  "devDependencies": {
+***REMOVED***"typescript": "5.5.4",
+***REMOVED***"@types/node": "20.14.10",
+***REMOVED***"@types/react": "18.3.3",
+***REMOVED***"@types/react-dom": "18.3.0",
+***REMOVED***"tailwindcss": "3.4.7",
+***REMOVED***"postcss": "8.4.39",
+***REMOVED***"autoprefixer": "10.4.19",
+***REMOVED***"eslint": "8.57.0",
+***REMOVED***"eslint-config-next": "14.2.5"
+  }
+}
