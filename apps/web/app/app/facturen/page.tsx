@@ -150,7 +150,45 @@ export default function FacturenPage() {
 ***REMOVED***  return;
 ***REMOVED***}
 
-***REMOVED***const { totalExcl, totalIncl, vat } = formTotals;
+***REMOVED***// Valideer en prepareer regels zodat ze binnen numeric(12,2) vallen
+***REMOVED***const maxAmount = 9999999999.99; // komt overeen met numeric(12,2)
+***REMOVED***let totalExclLocal = 0;
+***REMOVED***const parsedLines = form.lines.map((line) => {
+***REMOVED***  const quantity = Number(line.quantity.replace(',', '.')) || 0;
+***REMOVED***  const unitPrice = Number(line.unitPrice.replace(',', '.')) || 0;
+***REMOVED***  const amount = quantity * unitPrice;
+***REMOVED***  return { line, quantity, unitPrice, amount };
+***REMOVED***});
+
+***REMOVED***for (const { quantity, unitPrice, amount } of parsedLines) {
+***REMOVED***  if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) {
+***REMOVED******REMOVED***setError('Gebruik alleen geldige getallen voor aantal en prijs.');
+***REMOVED******REMOVED***setSaving(false);
+***REMOVED******REMOVED***return;
+***REMOVED***  }
+***REMOVED***  totalExclLocal += amount;
+***REMOVED***  if (
+***REMOVED******REMOVED***Math.abs(quantity) > maxAmount ||
+***REMOVED******REMOVED***Math.abs(unitPrice) > maxAmount ||
+***REMOVED******REMOVED***Math.abs(amount) > maxAmount ||
+***REMOVED******REMOVED***Math.abs(totalExclLocal) > maxAmount
+***REMOVED***  ) {
+***REMOVED******REMOVED***setError('Bedragen zijn te groot om op te slaan. Verklein de bedragen.');
+***REMOVED******REMOVED***setSaving(false);
+***REMOVED******REMOVED***return;
+***REMOVED***  }
+***REMOVED***}
+
+***REMOVED***const vat = Number(form.vatRate) || 0;
+***REMOVED***const totalInclLocal = totalExclLocal * (1 + vat / 100);
+
+***REMOVED***const linePayload = parsedLines.map(({ line, quantity, unitPrice, amount }) => ({
+***REMOVED***  invoice_id: editingId ?? undefined,
+***REMOVED***  description: line.description,
+***REMOVED***  quantity,
+***REMOVED***  unit_price: unitPrice,
+***REMOVED***  amount_excl: amount,
+***REMOVED***}));
 
 ***REMOVED***try {
 ***REMOVED***  if (!editingId) {
@@ -158,9 +196,9 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***  .from('invoices')
 ***REMOVED******REMOVED***  .insert({
 ***REMOVED******REMOVED******REMOVED***customer_name: form.customerName,
-***REMOVED******REMOVED******REMOVED***amount_excl: totalExcl,
+***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
-***REMOVED******REMOVED******REMOVED***amount_incl: totalIncl,
+***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
 ***REMOVED******REMOVED******REMOVED***due_date: form.dueDate || null,
 ***REMOVED******REMOVED******REMOVED***status: 'concept',
 ***REMOVED******REMOVED***  })
@@ -175,22 +213,21 @@ export default function FacturenPage() {
 
 ***REMOVED******REMOVED***const invoiceId = inserted.id as string;
 
-***REMOVED******REMOVED***const linePayload = form.lines.map((line) => {
-***REMOVED******REMOVED***  const q = Number(line.quantity.replace(',', '.')) || 0;
-***REMOVED******REMOVED***  const p = Number(line.unitPrice.replace(',', '.')) || 0;
-***REMOVED******REMOVED***  return {
-***REMOVED******REMOVED******REMOVED***invoice_id: invoiceId,
-***REMOVED******REMOVED******REMOVED***description: line.description,
-***REMOVED******REMOVED******REMOVED***quantity: q,
-***REMOVED******REMOVED******REMOVED***unit_price: p,
-***REMOVED******REMOVED******REMOVED***amount_excl: q * p,
-***REMOVED******REMOVED***  };
-***REMOVED******REMOVED***});
+***REMOVED******REMOVED***const payloadWithInvoice = linePayload.map((p) => ({
+***REMOVED******REMOVED***  ...p,
+***REMOVED******REMOVED***  invoice_id: invoiceId,
+***REMOVED******REMOVED***}));
 
-***REMOVED******REMOVED***if (linePayload.length > 0) {
-***REMOVED******REMOVED***  const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
+***REMOVED******REMOVED***if (payloadWithInvoice.length > 0) {
+***REMOVED******REMOVED***  const { error: lineError } = await supabase
+***REMOVED******REMOVED******REMOVED***.from('invoice_lines')
+***REMOVED******REMOVED******REMOVED***.insert(payloadWithInvoice);
 ***REMOVED******REMOVED***  if (lineError) {
-***REMOVED******REMOVED******REMOVED***console.error('Kon factuurregels niet opslaan:', lineError);
+***REMOVED******REMOVED******REMOVED***console.error('Kon factuurregels niet opslaan, factuur wordt verwijderd:', lineError);
+***REMOVED******REMOVED******REMOVED***await supabase.from('invoices').delete().eq('id', invoiceId);
+***REMOVED******REMOVED******REMOVED***setError('Factuurregels konden niet worden opgeslagen. De factuur is niet bewaard.');
+***REMOVED******REMOVED******REMOVED***setSaving(false);
+***REMOVED******REMOVED******REMOVED***return;
 ***REMOVED******REMOVED***  }
 ***REMOVED******REMOVED***}
 ***REMOVED***  } else {
@@ -198,9 +235,9 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***  .from('invoices')
 ***REMOVED******REMOVED***  .update({
 ***REMOVED******REMOVED******REMOVED***customer_name: form.customerName,
-***REMOVED******REMOVED******REMOVED***amount_excl: totalExcl,
+***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
-***REMOVED******REMOVED******REMOVED***amount_incl: totalIncl,
+***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
 ***REMOVED******REMOVED******REMOVED***due_date: form.dueDate || null,
 ***REMOVED******REMOVED***  })
 ***REMOVED******REMOVED***  .eq('id', editingId);
@@ -212,21 +249,18 @@ export default function FacturenPage() {
 
 ***REMOVED******REMOVED***await supabase.from('invoice_lines').delete().eq('invoice_id', editingId);
 
-***REMOVED******REMOVED***const linePayload = form.lines.map((line) => {
-***REMOVED******REMOVED***  const q = Number(line.quantity.replace(',', '.')) || 0;
-***REMOVED******REMOVED***  const p = Number(line.unitPrice.replace(',', '.')) || 0;
-***REMOVED******REMOVED***  return {
-***REMOVED******REMOVED******REMOVED***invoice_id: editingId,
-***REMOVED******REMOVED******REMOVED***description: line.description,
-***REMOVED******REMOVED******REMOVED***quantity: q,
-***REMOVED******REMOVED******REMOVED***unit_price: p,
-***REMOVED******REMOVED******REMOVED***amount_excl: q * p,
-***REMOVED******REMOVED***  };
-***REMOVED******REMOVED***});
-***REMOVED******REMOVED***if (linePayload.length > 0) {
-***REMOVED******REMOVED***  const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
+***REMOVED******REMOVED***const payloadWithInvoice = linePayload.map((p) => ({
+***REMOVED******REMOVED***  ...p,
+***REMOVED******REMOVED***  invoice_id: editingId,
+***REMOVED******REMOVED***}));
+
+***REMOVED******REMOVED***if (payloadWithInvoice.length > 0) {
+***REMOVED******REMOVED***  const { error: lineError } = await supabase
+***REMOVED******REMOVED******REMOVED***.from('invoice_lines')
+***REMOVED******REMOVED******REMOVED***.insert(payloadWithInvoice);
 ***REMOVED******REMOVED***  if (lineError) {
-***REMOVED******REMOVED******REMOVED***console.error('Kon factuurregels niet opslaan:', lineError);
+***REMOVED******REMOVED******REMOVED***console.error('Kon factuurregels niet opslaan bij bijwerken:', lineError);
+***REMOVED******REMOVED******REMOVED***setError('Factuur is bijgewerkt, maar regels konden niet worden opgeslagen.');
 ***REMOVED******REMOVED***  }
 ***REMOVED******REMOVED***}
 ***REMOVED***  }
@@ -593,16 +627,22 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  + Regel toevoegen
 ***REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex flex-col items-end gap-1 text-[11px] text-muted md:flex-row md:justify-end md:gap-4">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[220px] items-center justify-between">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Subtotaal:</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalExcl.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="font-mono font-medium text-text"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  style={{ fontVariantNumeric: 'tabular-nums' }}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalExclLocalDisplay(formTotals.totalExcl)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[220px] items-center justify-between">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Totaal incl. btw:</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalIncl.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="font-mono font-medium text-text"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  style={{ fontVariantNumeric: 'tabular-nums' }}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalExclLocalDisplay(formTotals.totalIncl)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
@@ -665,4 +705,9 @@ export default function FacturenPage() {
 ***REMOVED***  )}
 ***REMOVED***</div>
   );
+}
+
+function totalExclLocalDisplay(value: number): string {
+  if (!Number.isFinite(value)) return '0.00';
+  return value.toFixed(2);
 }
