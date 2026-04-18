@@ -1,9 +1,19 @@
 'use client';
-// synced via assistant 2026-04-18 15:58 + pdf-export 16:48
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
-import jsPDF from 'jspdf';
+
+interface Customer {
+  id: string;
+  name: string;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  vat_number: string | null;
+  kvk: string | null;
+  email: string | null;
+  phone: string | null;
+}
 
 interface InvoiceLineForm {
   description: string;
@@ -12,6 +22,7 @@ interface InvoiceLineForm {
 }
 
 interface InvoiceForm {
+  customerId: string;
   customerName: string;
   vatRate: string;
   dueDate: string;
@@ -38,9 +49,23 @@ interface InvoiceLineRow {
   amount_excl: number;
 }
 
+interface CompanySettings {
+  company_name: string;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  kvk: string | null;
+  vat_number: string | null;
+  iban: string | null;
+  email: string | null;
+  website: string | null;
+}
+
 export default function FacturenPage() {
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [linesByInvoice, setLinesByInvoice] = useState<Record<string, InvoiceLineRow[]>>({});
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -49,6 +74,7 @@ export default function FacturenPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState<InvoiceForm>({
+***REMOVED***customerId: '',
 ***REMOVED***customerName: '',
 ***REMOVED***vatRate: '21',
 ***REMOVED***dueDate: '',
@@ -58,19 +84,40 @@ export default function FacturenPage() {
   useEffect(() => {
 ***REMOVED***async function loadData() {
 ***REMOVED***  setLoading(true);
-***REMOVED***  const { data: invData, error: invError } = await supabase
-***REMOVED******REMOVED***.from('invoices')
-***REMOVED******REMOVED***.select('*')
-***REMOVED******REMOVED***.order('issue_date', { ascending: false });
 
-***REMOVED***  if (invError) {
+***REMOVED***  const [invRes, custRes, compRes] = await Promise.all([
+***REMOVED******REMOVED***supabase.from('invoices').select('*').order('issue_date', { ascending: false }),
+***REMOVED******REMOVED***supabase.from('customers').select('*').order('name', { ascending: true }),
+***REMOVED******REMOVED***supabase.from('company_settings').select('*').single(),
+***REMOVED***  ]);
+
+***REMOVED***  if (invRes.error) {
 ***REMOVED******REMOVED***setError('Kon facturen niet ophalen.');
 ***REMOVED******REMOVED***setLoading(false);
 ***REMOVED******REMOVED***return;
 ***REMOVED***  }
 
-***REMOVED***  const invoicesTyped = (invData as InvoiceRow[]) ?? [];
+***REMOVED***  const invoicesTyped = (invRes.data as InvoiceRow[]) ?? [];
 ***REMOVED***  setInvoices(invoicesTyped);
+
+***REMOVED***  if (!custRes.error && custRes.data) {
+***REMOVED******REMOVED***setCustomers(custRes.data as Customer[]);
+***REMOVED***  }
+
+***REMOVED***  if (!compRes.error && compRes.data) {
+***REMOVED******REMOVED***const d = compRes.data as any;
+***REMOVED******REMOVED***setCompanySettings({
+***REMOVED******REMOVED***  company_name: d.company_name ?? '',
+***REMOVED******REMOVED***  street: d.street ?? null,
+***REMOVED******REMOVED***  postal_code: d.postal_code ?? null,
+***REMOVED******REMOVED***  city: d.city ?? null,
+***REMOVED******REMOVED***  kvk: d.kvk ?? null,
+***REMOVED******REMOVED***  vat_number: d.vat_number ?? null,
+***REMOVED******REMOVED***  iban: d.iban ?? null,
+***REMOVED******REMOVED***  email: d.email ?? null,
+***REMOVED******REMOVED***  website: d.website ?? null,
+***REMOVED******REMOVED***});
+***REMOVED***  }
 
 ***REMOVED***  if (invoicesTyped.length > 0) {
 ***REMOVED******REMOVED***const ids = invoicesTyped.map((i) => i.id);
@@ -97,6 +144,7 @@ export default function FacturenPage() {
   function resetForm() {
 ***REMOVED***setEditingId(null);
 ***REMOVED***setForm({
+***REMOVED***  customerId: '',
 ***REMOVED***  customerName: '',
 ***REMOVED***  vatRate: '21',
 ***REMOVED***  dueDate: '',
@@ -311,6 +359,7 @@ export default function FacturenPage() {
 
 ***REMOVED***setEditingId(inv.id);
 ***REMOVED***setForm({
+***REMOVED***  customerId: '',
 ***REMOVED***  customerName: inv.customer_name,
 ***REMOVED***  vatRate: String(inv.vat_rate),
 ***REMOVED***  dueDate: inv.due_date ?? '',
@@ -345,6 +394,51 @@ export default function FacturenPage() {
 ***REMOVED***const marginLeft = 20;
 ***REMOVED***let cursorY = 20;
 
+***REMOVED***// Bedrijfskop
+***REMOVED***if (companySettings) {
+***REMOVED***  doc.setFont('helvetica', 'bold');
+***REMOVED***  doc.setFontSize(12);
+***REMOVED***  doc.text(companySettings.company_name || '-', marginLeft, cursorY);
+***REMOVED***  doc.setFontSize(9);
+***REMOVED***  doc.setFont('helvetica', 'normal');
+***REMOVED***  cursorY += 5;
+***REMOVED***  if (companySettings.street) doc.text(companySettings.street, marginLeft, cursorY);
+***REMOVED***  if (companySettings.postal_code || companySettings.city) {
+***REMOVED******REMOVED***cursorY += 4;
+***REMOVED******REMOVED***doc.text(
+***REMOVED******REMOVED***  `${companySettings.postal_code ?? ''} ${companySettings.city ?? ''}`.trim(),
+***REMOVED******REMOVED***  marginLeft,
+***REMOVED******REMOVED***  cursorY,
+***REMOVED******REMOVED***);
+***REMOVED***  }
+***REMOVED***  if (companySettings.kvk || companySettings.vat_number) {
+***REMOVED******REMOVED***cursorY += 4;
+***REMOVED******REMOVED***const kvkVat = [
+***REMOVED******REMOVED***  companySettings.kvk ? `KVK: ${companySettings.kvk}` : null,
+***REMOVED******REMOVED***  companySettings.vat_number ? `Btw: ${companySettings.vat_number}` : null,
+***REMOVED******REMOVED***]
+***REMOVED******REMOVED***  .filter(Boolean)
+***REMOVED******REMOVED***  .join('  |  ');
+***REMOVED******REMOVED***if (kvkVat) doc.text(kvkVat, marginLeft, cursorY);
+***REMOVED***  }
+***REMOVED***  if (companySettings.iban) {
+***REMOVED******REMOVED***cursorY += 4;
+***REMOVED******REMOVED***doc.text(`IBAN: ${companySettings.iban}`, marginLeft, cursorY);
+***REMOVED***  }
+***REMOVED***  if (companySettings.email || companySettings.website) {
+***REMOVED******REMOVED***cursorY += 4;
+***REMOVED******REMOVED***const contact = [
+***REMOVED******REMOVED***  companySettings.email ? companySettings.email : null,
+***REMOVED******REMOVED***  companySettings.website ? companySettings.website : null,
+***REMOVED******REMOVED***]
+***REMOVED******REMOVED***  .filter(Boolean)
+***REMOVED******REMOVED***  .join('  |  ');
+***REMOVED******REMOVED***if (contact) doc.text(contact, marginLeft, cursorY);
+***REMOVED***  }
+***REMOVED***  cursorY += 8;
+***REMOVED***}
+
+***REMOVED***// Factuurkop
 ***REMOVED***doc.setFont('helvetica', 'bold');
 ***REMOVED***doc.setFontSize(16);
 ***REMOVED***doc.text('FACTUUR', marginLeft, cursorY);
@@ -358,6 +452,7 @@ export default function FacturenPage() {
 ***REMOVED***cursorY += 5;
 ***REMOVED***doc.text(`Vervaldatum: ${inv.due_date?.slice(0, 10) || '-'}`, marginLeft, cursorY);
 
+***REMOVED***// Klantblok
 ***REMOVED***cursorY += 10;
 ***REMOVED***doc.setFont('helvetica', 'bold');
 ***REMOVED***doc.text('Klant', marginLeft, cursorY);
@@ -404,6 +499,16 @@ export default function FacturenPage() {
 ***REMOVED***doc.text(`Btw (${inv.vat_rate.toFixed(0)}%): € ${vatAmount.toFixed(2)}`, marginLeft, cursorY);
 ***REMOVED***cursorY += 5;
 ***REMOVED***doc.text(`Totaal (incl. btw): € ${inv.amount_incl.toFixed(2)}`, marginLeft, cursorY);
+
+***REMOVED***cursorY += 10;
+***REMOVED***if (companySettings?.iban) {
+***REMOVED***  doc.setFont('helvetica', 'normal');
+***REMOVED***  doc.text(
+***REMOVED******REMOVED***`Gelieve dit bedrag binnen de betalingstermijn over te maken op IBAN ${companySettings.iban}.`,
+***REMOVED******REMOVED***marginLeft,
+***REMOVED******REMOVED***cursorY,
+***REMOVED***  );
+***REMOVED***}
 
 ***REMOVED***doc.save(`factuur-${inv.id.slice(0, 8)}.pdf`);
   }
@@ -555,7 +660,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  {editingId ? 'Factuur bewerken' : 'Nieuwe factuur'}
 ***REMOVED******REMOVED******REMOVED******REMOVED***</h2>
-***REMOVED******REMOVED******REMOVED******REMOVED***<p className="text-xs text-muted">Vul de regels voor deze factuur in.</p>
+***REMOVED******REMOVED******REMOVED******REMOVED***<p className="text-xs text-muted">Kies een klant en vul de regels in.</p>
 ***REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED***  <button
 ***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
@@ -571,9 +676,38 @@ export default function FacturenPage() {
 
 ***REMOVED******REMOVED******REMOVED***<form onSubmit={handleSubmit} className="space-y-4 text-sm">
 ***REMOVED******REMOVED******REMOVED***  <div className="grid gap-4 md:grid-cols-2">
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="md:col-span-2">
+***REMOVED******REMOVED******REMOVED******REMOVED***<div>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="customerId">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Klant
+***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <select
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***id="customerId"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***value={form.customerId}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  const id = e.target.value;
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  const found = customers.find((c) => c.id === id);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  setForm((f) => ({
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***...f,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***customerId: id,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***customerName: found ? found.name : '',
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  }));
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+***REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="">Klant kiezen of zelf invullen…</option>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{customers.map((c) => (
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <option key={c.id} value={c.id}>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{c.name}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </option>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***))}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </select>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <p className="mt-1 text-[10px] text-muted">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Staat je klant er nog niet tussen? Vul hieronder een naam in, later komt er een klantenbeheer.
+***REMOVED******REMOVED******REMOVED******REMOVED***  </p>
+***REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="md:col-span-1">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="customerName">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Klantnaam
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Klantnaam (op factuur)
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <input
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***id="customerName"
