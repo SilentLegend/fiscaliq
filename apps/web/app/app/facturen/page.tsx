@@ -1,8 +1,9 @@
 'use client';
-// synced via assistant 2026-04-18 15:58
+// synced via assistant 2026-04-18 15:58 + pdf-export 16:48
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
+import jsPDF from 'jspdf';
 
 interface InvoiceLineForm {
   description: string;
@@ -338,6 +339,75 @@ export default function FacturenPage() {
 ***REMOVED***});
   }
 
+  function handleDownloadPdf(inv: InvoiceRow) {
+***REMOVED***const lines = linesByInvoice[inv.id] ?? [];
+***REMOVED***const doc = new jsPDF();
+***REMOVED***const marginLeft = 20;
+***REMOVED***let cursorY = 20;
+
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.setFontSize(16);
+***REMOVED***doc.text('FACTUUR', marginLeft, cursorY);
+
+***REMOVED***doc.setFontSize(10);
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***cursorY += 8;
+***REMOVED***doc.text(`Factuurnummer: ${inv.id.slice(0, 8).toUpperCase()}`, marginLeft, cursorY);
+***REMOVED***cursorY += 5;
+***REMOVED***doc.text(`Factuurdatum: ${inv.issue_date?.slice(0, 10) || '-'}`, marginLeft, cursorY);
+***REMOVED***cursorY += 5;
+***REMOVED***doc.text(`Vervaldatum: ${inv.due_date?.slice(0, 10) || '-'}`, marginLeft, cursorY);
+
+***REMOVED***cursorY += 10;
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text('Klant', marginLeft, cursorY);
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***cursorY += 5;
+***REMOVED***doc.text(inv.customer_name || '-', marginLeft, cursorY);
+
+***REMOVED***cursorY += 10;
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text('Omschrijving', marginLeft, cursorY);
+***REMOVED***doc.text('Aantal', marginLeft + 90, cursorY);
+***REMOVED***doc.text('Prijs', marginLeft + 120, cursorY);
+***REMOVED***doc.text('Totaal', marginLeft + 150, cursorY);
+
+***REMOVED***cursorY += 4;
+***REMOVED***doc.setDrawColor(200);
+***REMOVED***doc.line(marginLeft, cursorY, 190, cursorY);
+
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***cursorY += 6;
+
+***REMOVED***lines.forEach((line) => {
+***REMOVED***  if (cursorY > 260) {
+***REMOVED******REMOVED***doc.addPage();
+***REMOVED******REMOVED***cursorY = 20;
+***REMOVED***  }
+***REMOVED***  doc.text(line.description || '-', marginLeft, cursorY);
+***REMOVED***  doc.text(String(line.quantity), marginLeft + 90, cursorY, { align: 'right' });
+***REMOVED***  doc.text(line.unit_price.toFixed(2), marginLeft + 120, cursorY, { align: 'right' });
+***REMOVED***  doc.text(line.amount_excl.toFixed(2), marginLeft + 150, cursorY, { align: 'right' });
+***REMOVED***  cursorY += 6;
+***REMOVED***});
+
+***REMOVED***cursorY += 4;
+***REMOVED***doc.setDrawColor(200);
+***REMOVED***doc.line(marginLeft, cursorY, 190, cursorY);
+***REMOVED***cursorY += 6;
+
+***REMOVED***const totalExcl = inv.amount_excl ?? 0;
+***REMOVED***const vatAmount = (inv.amount_incl ?? 0) - totalExcl;
+
+***REMOVED***doc.text(`Subtotaal (excl. btw): € ${totalExcl.toFixed(2)}`, marginLeft, cursorY);
+***REMOVED***cursorY += 5;
+***REMOVED***doc.text(`Btw (${inv.vat_rate.toFixed(0)}%): € ${vatAmount.toFixed(2)}`, marginLeft, cursorY);
+***REMOVED***cursorY += 5;
+***REMOVED***doc.text(`Totaal (incl. btw): € ${inv.amount_incl.toFixed(2)}`, marginLeft, cursorY);
+
+***REMOVED***doc.save(`factuur-${inv.id.slice(0, 8)}.pdf`);
+  }
+
   return (
 ***REMOVED***<div className="space-y-6">
 ***REMOVED***  <div className="flex flex-wrap items-center justify-between gap-3">
@@ -429,6 +499,24 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  >
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M5 19h3.2L19 8.2 15.8 5 5 15.8V19z" />
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M14.2 5 19 9.8" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </svg>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</button>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<button
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onClick={() => handleDownloadPdf(inv)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="mr-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border text-[10px] text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  aria-label="Factuur downloaden als PDF"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <svg
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***aria-hidden
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***viewBox="0 0 24 24"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="h-3.5 w-3.5 stroke-current"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***fill="none"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***strokeWidth={1.8}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M12 3v14" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M8 13l4 4 4-4" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M5 19h14" />
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </svg>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<button
