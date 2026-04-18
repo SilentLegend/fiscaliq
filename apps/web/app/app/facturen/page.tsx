@@ -190,8 +190,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***if (linePayload.length > 0) {
 ***REMOVED******REMOVED***  const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
 ***REMOVED******REMOVED***  if (lineError) {
-***REMOVED******REMOVED******REMOVED***console.error(lineError);
-***REMOVED******REMOVED******REMOVED***setError('Factuur opgeslagen, maar regels konden niet worden opgeslagen.');
+***REMOVED******REMOVED******REMOVED***console.error('Kon factuurregels niet opslaan:', lineError);
 ***REMOVED******REMOVED***  }
 ***REMOVED******REMOVED***}
 ***REMOVED***  } else {
@@ -227,8 +226,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***if (linePayload.length > 0) {
 ***REMOVED******REMOVED***  const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
 ***REMOVED******REMOVED***  if (lineError) {
-***REMOVED******REMOVED******REMOVED***console.error(lineError);
-***REMOVED******REMOVED******REMOVED***setError('Factuur bijgewerkt, maar regels konden niet worden opgeslagen.');
+***REMOVED******REMOVED******REMOVED***console.error('Kon factuurregels niet opslaan:', lineError);
 ***REMOVED******REMOVED***  }
 ***REMOVED******REMOVED***}
 ***REMOVED***  }
@@ -242,16 +240,18 @@ export default function FacturenPage() {
 
 ***REMOVED***  if (invoicesTyped.length > 0) {
 ***REMOVED******REMOVED***const ids = invoicesTyped.map((i) => i.id);
-***REMOVED******REMOVED***const { data: lineData } = await supabase
+***REMOVED******REMOVED***const { data: lineData, error: lineError } = await supabase
 ***REMOVED******REMOVED***  .from('invoice_lines')
 ***REMOVED******REMOVED***  .select('*')
 ***REMOVED******REMOVED***  .in('invoice_id', ids);
-***REMOVED******REMOVED***const grouped: Record<string, InvoiceLineRow[]> = {};
-***REMOVED******REMOVED***(lineData as InvoiceLineRow[] | null)?.forEach((l) => {
-***REMOVED******REMOVED***  if (!grouped[l.invoice_id]) grouped[l.invoice_id] = [];
-***REMOVED******REMOVED***  grouped[l.invoice_id].push(l);
-***REMOVED******REMOVED***});
-***REMOVED******REMOVED***setLinesByInvoice(grouped);
+***REMOVED******REMOVED***if (!lineError && lineData) {
+***REMOVED******REMOVED***  const grouped: Record<string, InvoiceLineRow[]> = {};
+***REMOVED******REMOVED***  (lineData as InvoiceLineRow[]).forEach((l) => {
+***REMOVED******REMOVED******REMOVED***if (!grouped[l.invoice_id]) grouped[l.invoice_id] = [];
+***REMOVED******REMOVED******REMOVED***grouped[l.invoice_id].push(l);
+***REMOVED******REMOVED***  });
+***REMOVED******REMOVED***  setLinesByInvoice(grouped);
+***REMOVED******REMOVED***}
 ***REMOVED***  }
 
 ***REMOVED***  resetForm();
@@ -264,8 +264,18 @@ export default function FacturenPage() {
 ***REMOVED***setSaving(false);
   }
 
-  function startEdit(inv: InvoiceRow) {
-***REMOVED***const lines = linesByInvoice[inv.id] ?? [];
+  async function startEdit(inv: InvoiceRow) {
+***REMOVED***let lines: InvoiceLineRow[] = [];
+***REMOVED***const { data: lineData, error: lineError } = await supabase
+***REMOVED***  .from('invoice_lines')
+***REMOVED***  .select('*')
+***REMOVED***  .eq('invoice_id', inv.id);
+
+***REMOVED***if (!lineError && lineData) {
+***REMOVED***  lines = lineData as InvoiceLineRow[];
+***REMOVED***  setLinesByInvoice((prev) => ({ ...prev, [inv.id]: lines }));
+***REMOVED***}
+
 ***REMOVED***setEditingId(inv.id);
 ***REMOVED***setForm({
 ***REMOVED***  customerName: inv.customer_name,
@@ -488,7 +498,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex items-center justify-between">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-xs font-medium text-text">Regels</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="max-h-64 space-y-2 overflow-y-auto pr-1">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  {form.lines.map((line, index) => (
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  key={index}
@@ -583,13 +593,18 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  + Regel toevoegen
 ***REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex flex-col items-end gap-1 text-[11px] text-muted md:flex-row md:justify-end md:gap-4">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="min-w-[160px] text-right">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Subtotaal: <span className="font-medium text-text">€ {formTotals.totalExcl.toFixed(2)}</span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  </span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="min-w-[180px] text-right">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Totaal incl. btw:{' '}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-medium text-text">€ {formTotals.totalIncl.toFixed(2)}</span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  </span>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[220px] items-center justify-between">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Subtotaal:</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalExcl.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[220px] items-center justify-between">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Totaal incl. btw:</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalIncl.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED***  </div>
 
@@ -622,8 +637,12 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***  <div className="w-full max-w-sm rounded-[1.6rem] border border-border bg-surface p-5 shadow-soft">
 ***REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">Factuur verwijderen</h2>
 ***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">
-***REMOVED******REMOVED******REMOVED***  Weet je zeker dat je factuur <span className="font-mono text-text">{deleteTarget.id.slice(0, 8).toUpperCase()}</span>{' '}
-***REMOVED******REMOVED******REMOVED***  voor <span className="font-medium text-text">{deleteTarget.customer_name}</span> wilt verwijderen?
+***REMOVED******REMOVED******REMOVED***  Weet je zeker dat je factuur{' '}
+***REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED***{deleteTarget.id.slice(0, 8).toUpperCase()}
+***REMOVED******REMOVED******REMOVED***  </span>{' '}
+***REMOVED******REMOVED******REMOVED***  voor <span className="font-medium text-text">{deleteTarget.customer_name}</span> wilt
+***REMOVED******REMOVED******REMOVED***  verwijderen?
 ***REMOVED******REMOVED******REMOVED***</p>
 ***REMOVED******REMOVED******REMOVED***<div className="mt-4 flex items-center justify-end gap-2 text-xs">
 ***REMOVED******REMOVED******REMOVED***  <button
