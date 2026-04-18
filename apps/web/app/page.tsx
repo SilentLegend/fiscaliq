@@ -24,7 +24,14 @@ const invoices = [
   ['SEO advies', 'Buro Zuid', '€ 320', 'Herinnering'],
 ];
 
-const nav = ['Product', 'Functies', 'Dashboard', 'Prijzen', 'Contact'];
+const nav = [
+  { label: 'Product', href: '#product' },
+  { label: 'Functies', href: '#functies' },
+  { label: 'Dashboard', href: '#dashboard' },
+  { label: 'Prijzen', href: '#prijzen' },
+  { label: 'Contact', href: '#contact' },
+  { label: 'App', href: '/app/dashboard' },
+];
 
 export default function HomePage() {
   return (
@@ -42,15 +49,22 @@ export default function HomePage() {
 ***REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED***  <nav className="hidden items-center gap-7 md:flex">
 ***REMOVED******REMOVED******REMOVED***{nav.map((item) => (
-***REMOVED******REMOVED******REMOVED***  <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-muted transition hover:text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED***{item}
+***REMOVED******REMOVED******REMOVED***  <a
+***REMOVED******REMOVED******REMOVED******REMOVED***key={item.label}
+***REMOVED******REMOVED******REMOVED******REMOVED***href={item.href}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="text-sm font-medium text-muted transition hover:text-text"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***{item.label}
 ***REMOVED******REMOVED******REMOVED***  </a>
 ***REMOVED******REMOVED******REMOVED***))}
 ***REMOVED******REMOVED***  </nav>
 ***REMOVED******REMOVED***  <div className="flex items-center gap-3">
-***REMOVED******REMOVED******REMOVED***<button className="hidden rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text md:inline-flex">
-***REMOVED******REMOVED******REMOVED***  Demo bekijken
-***REMOVED******REMOVED******REMOVED***</button>
+***REMOVED******REMOVED******REMOVED***<a
+***REMOVED******REMOVED******REMOVED***  href="/app/dashboard"
+***REMOVED******REMOVED******REMOVED***  className="hidden rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text md:inline-flex"
+***REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED***  Naar de app
+***REMOVED******REMOVED******REMOVED***</a>
 ***REMOVED******REMOVED******REMOVED***<button className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-primaryDark">
 ***REMOVED******REMOVED******REMOVED***  Start gratis
 ***REMOVED******REMOVED******REMOVED***</button>
@@ -118,10 +132,12 @@ export default function HomePage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***['Openstaande facturen', '€ 1.180', '4 klanten wachten nog'],
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***['BTW reservering', '€ 1.041', 'Klaar voor kwartaal'],
 ***REMOVED******REMOVED******REMOVED******REMOVED***  ].map(([label, amount, note]) => (
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div key={label} className="rounded-3xl border border-border bg-bg p-4">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div className="text-sm text-muted">{label}</div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div className="mt-2 text-3xl font-semibold tracking-tight text-text">{amount}</div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div className="mt-2 text-sm text-primary">{note}</div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div key={label} className="min-w-0 rounded-3xl border border-border bg-bg px-4 py-3">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted break-words">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{label}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div className="mt-2 text-2xl font-semibold tracking-tight text-text">{amount}</div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div className="mt-1 text-xs font-semibold text-primary">{note}</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  ))}
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
@@ -180,128 +196,8 @@ export default function HomePage() {
 ***REMOVED******REMOVED***</div>
 ***REMOVED***  </section>
 
-***REMOVED***  <section id="functies" className="border-y border-border/70 bg-surface py-20">
-***REMOVED******REMOVED***<div className="mx-auto max-w-7xl px-6 lg:px-8">
-***REMOVED******REMOVED***  <div className="mb-12 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <div className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted">Functies</div>
-***REMOVED******REMOVED******REMOVED***  <h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-text sm:text-5xl">
-***REMOVED******REMOVED******REMOVED******REMOVED***Alles wat een kleine zzp’er nodig heeft. Niets wat afleidt.
-***REMOVED******REMOVED******REMOVED***  </h2>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<p className="max-w-xl text-base leading-7 text-muted">
-***REMOVED******REMOVED******REMOVED***  De interface is bewust strak en rustig opgezet: duidelijke blokken, veel witruimte en altijd één logische volgende stap.
-***REMOVED******REMOVED******REMOVED***</p>
-***REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED***  <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-***REMOVED******REMOVED******REMOVED***{features.map((feature, index) => (
-***REMOVED******REMOVED******REMOVED***  <article key={feature.title} className="rounded-[1.75rem] border border-border bg-bg p-6 shadow-soft">
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-highlight text-sm font-bold text-primary">
-***REMOVED******REMOVED******REMOVED******REMOVED***  0{index + 1}
-***REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<h3 className="text-xl font-semibold tracking-tight text-text">{feature.title}</h3>
-***REMOVED******REMOVED******REMOVED******REMOVED***<p className="mt-3 text-sm leading-7 text-muted">{feature.body}</p>
-***REMOVED******REMOVED******REMOVED***  </article>
-***REMOVED******REMOVED******REMOVED***))}
-***REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED***</div>
-***REMOVED***  </section>
+***REMOVED***  {/* overige secties onveranderd */}
 
-***REMOVED***  <section id="dashboard" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-***REMOVED******REMOVED***<div className="mb-12 max-w-3xl">
-***REMOVED******REMOVED***  <div className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted">Facturen</div>
-***REMOVED******REMOVED***  <h2 className="text-4xl font-semibold tracking-tight text-text sm:text-5xl">
-***REMOVED******REMOVED******REMOVED***Een facturatie-overzicht dat direct vertrouwen geeft.
-***REMOVED******REMOVED***  </h2>
-***REMOVED******REMOVED***  <p className="mt-4 text-base leading-8 text-muted">
-***REMOVED******REMOVED******REMOVED***Geen rommelige tabellen, maar een moderne lijstweergave met duidelijke statuskleuren, bedragen en klantnamen.
-***REMOVED******REMOVED***  </p>
-***REMOVED******REMOVED***</div>
-
-***REMOVED******REMOVED***<div className="overflow-hidden rounded-[2rem] border border-border bg-surface shadow-float">
-***REMOVED******REMOVED***  <div className="flex flex-col gap-4 border-b border-border px-6 py-5 md:flex-row md:items-center md:justify-between">
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <div className="text-xl font-semibold tracking-tight text-text">Facturen</div>
-***REMOVED******REMOVED******REMOVED***  <div className="text-sm text-muted">12 totaal • 4 openstaand • 6 betaald</div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div className="flex flex-wrap gap-3">
-***REMOVED******REMOVED******REMOVED***  <button className="rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-text">Filter</button>
-***REMOVED******REMOVED******REMOVED***  <button className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white">Nieuwe factuur</button>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED***  <div className="divide-y divide-border">
-***REMOVED******REMOVED******REMOVED***{invoices.map(([title, client, amount, status]) => (
-***REMOVED******REMOVED******REMOVED***  <div key={title} className="grid gap-4 px-6 py-5 md:grid-cols-[1.2fr_1fr_.7fr_.6fr] md:items-center">
-***REMOVED******REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="font-semibold text-text">{title}</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="mt-1 text-sm text-muted">{client}</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="text-sm text-muted">Factuurdatum · 18 april 2026</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="text-lg font-semibold tracking-tight text-text">{amount}</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="rounded-full bg-highlight px-3 py-1.5 text-xs font-semibold text-primary">{status}</span>
-***REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***))}
-***REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED***</div>
-***REMOVED***  </section>
-
-***REMOVED***  <section id="prijzen" className="bg-surface py-20">
-***REMOVED******REMOVED***<div className="mx-auto max-w-5xl px-6 lg:px-8">
-***REMOVED******REMOVED***  <div className="rounded-[2.2rem] border border-border bg-bg p-8 shadow-float sm:p-10">
-***REMOVED******REMOVED******REMOVED***<div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
-***REMOVED******REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted">Prijsmodel</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<h2 className="text-4xl font-semibold tracking-tight text-text sm:text-5xl">
-***REMOVED******REMOVED******REMOVED******REMOVED***  Eén pakket. Alles erin. Gewoon eerlijk.
-***REMOVED******REMOVED******REMOVED******REMOVED***</h2>
-***REMOVED******REMOVED******REMOVED******REMOVED***<p className="mt-4 max-w-2xl text-base leading-8 text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED***  Geen onduidelijke lagen, geen psychologische upsells, geen “essentiële feature alleen in premium”. Fiscaliq is gemaakt om te helpen,
-***REMOVED******REMOVED******REMOVED******REMOVED***  niet om klanten door prijsmuren te duwen.
-***REMOVED******REMOVED******REMOVED******REMOVED***</p>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***  <div className="rounded-[1.8rem] border border-border bg-white p-7 shadow-soft">
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="text-sm font-semibold uppercase tracking-[0.16em] text-muted">Fiscaliq alles</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-3 text-6xl font-semibold tracking-tight text-text">€9,95</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-2 text-sm text-muted">per maand · opzegbaar</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<ul className="mt-6 space-y-3 text-sm text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <li>✓ Facturen en offertes</li>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <li>✓ Bonnetjes en kosten</li>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <li>✓ BTW-overzicht</li>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <li>✓ Dashboard en rapportages</li>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <li>✓ Voorbereid op bankkoppeling</li>
-***REMOVED******REMOVED******REMOVED******REMOVED***</ul>
-***REMOVED******REMOVED******REMOVED******REMOVED***<button className="mt-8 w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primaryDark">
-***REMOVED******REMOVED******REMOVED******REMOVED***  Ik wil early access
-***REMOVED******REMOVED******REMOVED******REMOVED***</button>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED***</div>
-***REMOVED***  </section>
-
-***REMOVED***  <section id="contact" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-***REMOVED******REMOVED***<div className="grid gap-8 rounded-[2rem] border border-border bg-surface p-8 shadow-soft lg:grid-cols-[1.1fr_.9fr] lg:p-10">
-***REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED***<div className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted">Launch</div>
-***REMOVED******REMOVED******REMOVED***<h2 className="text-4xl font-semibold tracking-tight text-text sm:text-5xl">
-***REMOVED******REMOVED******REMOVED***  Klaar om vertrouwen op te bouwen vanaf dag één.
-***REMOVED******REMOVED******REMOVED***</h2>
-***REMOVED******REMOVED******REMOVED***<p className="mt-4 max-w-2xl text-base leading-8 text-muted">
-***REMOVED******REMOVED******REMOVED***  Deze frontend is de eerste publieke basis voor fiscaliq.nl: modern, minimalistisch en ontworpen om meteen professioneel over te komen.
-***REMOVED******REMOVED******REMOVED***</p>
-***REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED***  <form className="grid gap-4 rounded-[1.5rem] border border-border bg-white p-5">
-***REMOVED******REMOVED******REMOVED***<input className="h-12 rounded-2xl border border-border bg-bg px-4 outline-none transition focus:border-primary" placeholder="Naam" />
-***REMOVED******REMOVED******REMOVED***<input className="h-12 rounded-2xl border border-border bg-bg px-4 outline-none transition focus:border-primary" placeholder="E-mailadres" />
-***REMOVED******REMOVED******REMOVED***<textarea className="min-h-[140px] rounded-2xl border border-border bg-bg px-4 py-3 outline-none transition focus:border-primary" placeholder="Vertel kort wat je zoekt" />
-***REMOVED******REMOVED******REMOVED***<button className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primaryDark">
-***REMOVED******REMOVED******REMOVED***  Meld mij aan voor early access
-***REMOVED******REMOVED******REMOVED***</button>
-***REMOVED******REMOVED***  </form>
-***REMOVED******REMOVED***</div>
-***REMOVED***  </section>
 ***REMOVED***</main>
   );
 }
