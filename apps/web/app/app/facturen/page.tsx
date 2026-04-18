@@ -43,6 +43,7 @@ export default function FacturenPage() {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<InvoiceRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState<InvoiceForm>({
@@ -153,7 +154,7 @@ export default function FacturenPage() {
 
 ***REMOVED***try {
 ***REMOVED***  if (!editingId) {
-***REMOVED******REMOVED***const { data: inserted, error } = await supabase
+***REMOVED******REMOVED***const { data: inserted, error: invError } = await supabase
 ***REMOVED******REMOVED***  .from('invoices')
 ***REMOVED******REMOVED***  .insert({
 ***REMOVED******REMOVED******REMOVED***customer_name: form.customerName,
@@ -166,7 +167,11 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***  .select('id')
 ***REMOVED******REMOVED***  .single();
 
-***REMOVED******REMOVED***if (error || !inserted) throw error;
+***REMOVED******REMOVED***if (invError || !inserted) {
+***REMOVED******REMOVED***  setError('Kon factuur niet opslaan.');
+***REMOVED******REMOVED***  setSaving(false);
+***REMOVED******REMOVED***  return;
+***REMOVED******REMOVED***}
 
 ***REMOVED******REMOVED***const invoiceId = inserted.id as string;
 
@@ -182,10 +187,15 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***  };
 ***REMOVED******REMOVED***});
 
-***REMOVED******REMOVED***const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
-***REMOVED******REMOVED***if (lineError) throw lineError;
+***REMOVED******REMOVED***if (linePayload.length > 0) {
+***REMOVED******REMOVED***  const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
+***REMOVED******REMOVED***  if (lineError) {
+***REMOVED******REMOVED******REMOVED***console.error(lineError);
+***REMOVED******REMOVED******REMOVED***setError('Factuur opgeslagen, maar regels konden niet worden opgeslagen.');
+***REMOVED******REMOVED***  }
+***REMOVED******REMOVED***}
 ***REMOVED***  } else {
-***REMOVED******REMOVED***const { error } = await supabase
+***REMOVED******REMOVED***const { error: invError } = await supabase
 ***REMOVED******REMOVED***  .from('invoices')
 ***REMOVED******REMOVED***  .update({
 ***REMOVED******REMOVED******REMOVED***customer_name: form.customerName,
@@ -195,9 +205,12 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***due_date: form.dueDate || null,
 ***REMOVED******REMOVED***  })
 ***REMOVED******REMOVED***  .eq('id', editingId);
-***REMOVED******REMOVED***if (error) throw error;
+***REMOVED******REMOVED***if (invError) {
+***REMOVED******REMOVED***  setError('Kon factuur niet bijwerken.');
+***REMOVED******REMOVED***  setSaving(false);
+***REMOVED******REMOVED***  return;
+***REMOVED******REMOVED***}
 
-***REMOVED******REMOVED***// Delete oude regels en voeg nieuwe in
 ***REMOVED******REMOVED***await supabase.from('invoice_lines').delete().eq('invoice_id', editingId);
 
 ***REMOVED******REMOVED***const linePayload = form.lines.map((line) => {
@@ -211,11 +224,15 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***amount_excl: q * p,
 ***REMOVED******REMOVED***  };
 ***REMOVED******REMOVED***});
-***REMOVED******REMOVED***const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
-***REMOVED******REMOVED***if (lineError) throw lineError;
+***REMOVED******REMOVED***if (linePayload.length > 0) {
+***REMOVED******REMOVED***  const { error: lineError } = await supabase.from('invoice_lines').insert(linePayload);
+***REMOVED******REMOVED***  if (lineError) {
+***REMOVED******REMOVED******REMOVED***console.error(lineError);
+***REMOVED******REMOVED******REMOVED***setError('Factuur bijgewerkt, maar regels konden niet worden opgeslagen.');
+***REMOVED******REMOVED***  }
+***REMOVED******REMOVED***}
 ***REMOVED***  }
 
-***REMOVED***  // Refresh data
 ***REMOVED***  const { data: invData } = await supabase
 ***REMOVED******REMOVED***.from('invoices')
 ***REMOVED******REMOVED***.select('*')
@@ -240,7 +257,8 @@ export default function FacturenPage() {
 ***REMOVED***  resetForm();
 ***REMOVED***  setShowForm(false);
 ***REMOVED***} catch (err) {
-***REMOVED***  setError('Kon factuur niet opslaan. Controleer je invoer.');
+***REMOVED***  console.error(err);
+***REMOVED***  setError('Er ging iets mis bij het opslaan. Probeer het opnieuw.');
 ***REMOVED***}
 
 ***REMOVED***setSaving(false);
@@ -265,14 +283,15 @@ export default function FacturenPage() {
 ***REMOVED***setShowForm(true);
   }
 
-  async function handleDelete(inv: InvoiceRow) {
-***REMOVED***const ok = window.confirm('Weet je zeker dat je deze factuur wilt verwijderen?');
-***REMOVED***if (!ok) return;
-***REMOVED***await supabase.from('invoices').delete().eq('id', inv.id);
-***REMOVED***setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
+  async function handleDeleteConfirm() {
+***REMOVED***if (!deleteTarget) return;
+***REMOVED***const target = deleteTarget;
+***REMOVED***setDeleteTarget(null);
+***REMOVED***await supabase.from('invoices').delete().eq('id', target.id);
+***REMOVED***setInvoices((prev) => prev.filter((i) => i.id !== target.id));
 ***REMOVED***setLinesByInvoice((prev) => {
 ***REMOVED***  const copy = { ...prev };
-***REMOVED***  delete copy[inv.id];
+***REMOVED***  delete copy[target.id];
 ***REMOVED***  return copy;
 ***REMOVED***});
   }
@@ -356,16 +375,39 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<button
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="button"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onClick={() => startEdit(inv)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="mr-2 rounded-full border border-border px-2 py-1 text-[10px] text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="mr-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border text-[10px] text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  aria-label="Factuur bewerken"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Bewerken
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <svg
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***aria-hidden
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***viewBox="0 0 24 24"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="h-3.5 w-3.5 stroke-current"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***fill="none"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***strokeWidth={1.8}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M5 19h3.2L19 8.2 15.8 5 5 15.8V19z" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M14.2 5 19 9.8" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </svg>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<button
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="button"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onClick={() => handleDelete(inv)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="rounded-full border border-rose-200 px-2 py-1 text-[10px] text-rose-700 hover:bg-rose-50"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onClick={() => setDeleteTarget(inv)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-200 text-[10px] text-rose-700 hover:bg-rose-50"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  aria-label="Factuur verwijderen"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Verwijderen
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <svg
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***aria-hidden
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***viewBox="0 0 24 24"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="h-3.5 w-3.5 stroke-current"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***fill="none"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***strokeWidth={1.8}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M9 4h6" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M5 7h14" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M8 7v11a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V7" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M10 10v6" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M14 10v6" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </svg>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</tr>
@@ -445,13 +487,6 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***  <div className="mt-2 space-y-3 rounded-2xl border border-border bg-surface-2 p-3">
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex items-center justify-between">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-xs font-medium text-text">Regels</span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <button
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="button"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onClick={addLine}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="text-[11px] font-medium text-primary hover:underline"
-***REMOVED******REMOVED******REMOVED******REMOVED***  >
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***+ Regel toevoegen
-***REMOVED******REMOVED******REMOVED******REMOVED***  </button>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div className="space-y-2 max-h-64 overflow-y-auto pr-1">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  {form.lines.map((line, index) => (
@@ -540,12 +575,20 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  ))}
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex items-center justify-end gap-4 text-[11px] text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <span>
+***REMOVED******REMOVED******REMOVED******REMOVED***<button
+***REMOVED******REMOVED******REMOVED******REMOVED***  type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***  onClick={addLine}
+***REMOVED******REMOVED******REMOVED******REMOVED***  className="mt-1 inline-flex w-full items-center justify-center rounded-2xl border border-dashed border-border bg-surface px-3 py-2 text-[11px] font-medium text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED******REMOVED***  + Regel toevoegen
+***REMOVED******REMOVED******REMOVED******REMOVED***</button>
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex flex-col items-end gap-1 text-[11px] text-muted md:flex-row md:justify-end md:gap-4">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="min-w-[160px] text-right">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Subtotaal: <span className="font-medium text-text">€ {formTotals.totalExcl.toFixed(2)}</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Totaal incl. btw: <span className="font-medium text-text">€ {formTotals.totalIncl.toFixed(2)}</span>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="min-w-[180px] text-right">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Totaal incl. btw:{' '}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-medium text-text">€ {formTotals.totalIncl.toFixed(2)}</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED***  </div>
@@ -570,6 +613,34 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED***</form>
+***REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED***</div>
+***REMOVED***  )}
+
+***REMOVED***  {deleteTarget && (
+***REMOVED******REMOVED***<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6">
+***REMOVED******REMOVED***  <div className="w-full max-w-sm rounded-[1.6rem] border border-border bg-surface p-5 shadow-soft">
+***REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">Factuur verwijderen</h2>
+***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">
+***REMOVED******REMOVED******REMOVED***  Weet je zeker dat je factuur <span className="font-mono text-text">{deleteTarget.id.slice(0, 8).toUpperCase()}</span>{' '}
+***REMOVED******REMOVED******REMOVED***  voor <span className="font-medium text-text">{deleteTarget.customer_name}</span> wilt verwijderen?
+***REMOVED******REMOVED******REMOVED***</p>
+***REMOVED******REMOVED******REMOVED***<div className="mt-4 flex items-center justify-end gap-2 text-xs">
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => setDeleteTarget(null)}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-border px-4 py-2 text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***Annuleren
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={handleDeleteConfirm}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-rose-300 bg-rose-50 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-100"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***Ja, verwijderen
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED***</div>
 ***REMOVED***  )}
