@@ -1,5 +1,5 @@
 'use client';
-// synced via assistant 2026-04-18 15:50
+// synced via assistant 2026-04-18 15:58
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
@@ -628,13 +628,13 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Subtotaal:</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalExclLocal.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalExcl.toFixed(2)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Totaal incl. btw:</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {totalInclLocal.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalIncl.toFixed(2)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
