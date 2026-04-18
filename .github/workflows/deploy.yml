@@ -1,0 +1,28 @@
+name: Deploy
+
+on:
+  push:
+***REMOVED***branches:
+***REMOVED***  - main
+  pull_request:
+***REMOVED***branches:
+***REMOVED***  - main
+
+jobs:
+  lint:
+***REMOVED***name: Lint & check
+***REMOVED***runs-on: ubuntu-latest
+***REMOVED***steps:
+***REMOVED***  - uses: actions/checkout@v4
+***REMOVED***  - name: Setup Node
+***REMOVED******REMOVED***uses: actions/setup-node@v4
+***REMOVED******REMOVED***with:
+***REMOVED******REMOVED***  node-version: 20
+***REMOVED***  - name: Install dependencies (web)
+***REMOVED******REMOVED***working-directory: apps/web
+***REMOVED******REMOVED***run: npm ci
+***REMOVED******REMOVED***continue-on-error: true
+***REMOVED***  - name: Run lint
+***REMOVED******REMOVED***working-directory: apps/web
+***REMOVED******REMOVED***run: npm run lint
+***REMOVED******REMOVED***continue-on-error: true
