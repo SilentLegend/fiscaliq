@@ -106,8 +106,8 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED******REMOVED***  fill="none"
 ***REMOVED******REMOVED***  strokeWidth={1.6}
 ***REMOVED******REMOVED***>
-***REMOVED******REMOVED***  <circle cx="12" cy="12" r="3.2" />
-***REMOVED******REMOVED***  <path d="M5.2 12.8a6.9 6.9 0 0 1 0-1.6l-1.6-1.2 1.2-2.1 1.9.4a6.9 6.9 0 0 1 1.4-.8l.3-2H14l.3 2c.5.2.9.5 1.4.8l1.9-.4 1.2 2.1-1.6 1.2a6.9 6.9 0 0 1 0 1.6l1.6 1.2-1.2 2.1-1.9-.4a6.9 6.9 0 0 1-1.4.8L14 20h-4l-.3-2a6.9 6.9 0 0 1-1.4-.8l-1.9.4-1.2-2.1z" />
+***REMOVED******REMOVED***  <circle cx="12" cy="12" r="3" />
+***REMOVED******REMOVED***  <path d="M4.9 9.5 6.3 8l1.6.3a5 5 0 0 1 1-.6L9.2 6h1.6l.3 1.7a5 5 0 0 1 1 .6L13.7 8l1.4 1.5-.3 1.7a5 5 0 0 1 0 1.2l.3 1.7-1.4 1.5-1.6-.3a5 5 0 0 1-1 .6L10.8 18H9.2l-.3-1.7a5 5 0 0 1-1-.6l-1.6.3L4.9 14.5l.3-1.7a5 5 0 0 1 0-1.2z" />
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
 ***REMOVED***default:
