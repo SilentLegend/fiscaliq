@@ -25,13 +25,7 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
   switch (name) {
 ***REMOVED***case 'dashboard':
 ***REMOVED***  return (
-***REMOVED******REMOVED***<svg
-***REMOVED******REMOVED***  aria-hidden
-***REMOVED******REMOVED***  viewBox="0 0 24 24"
-***REMOVED******REMOVED***  className={base}
-***REMOVED******REMOVED***  fill="none"
-***REMOVED******REMOVED***  strokeWidth={1.6}
-***REMOVED******REMOVED***>
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
 ***REMOVED******REMOVED***  <rect x="3" y="3" width="8" height="7" rx="2" />
 ***REMOVED******REMOVED***  <rect x="13" y="3" width="8" height="4" rx="2" />
 ***REMOVED******REMOVED***  <rect x="13" y="9" width="8" height="12" rx="2" />
@@ -40,13 +34,7 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED***  );
 ***REMOVED***case 'invoice':
 ***REMOVED***  return (
-***REMOVED******REMOVED***<svg
-***REMOVED******REMOVED***  aria-hidden
-***REMOVED******REMOVED***  viewBox="0 0 24 24"
-***REMOVED******REMOVED***  className={base}
-***REMOVED******REMOVED***  fill="none"
-***REMOVED******REMOVED***  strokeWidth={1.6}
-***REMOVED******REMOVED***>
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
 ***REMOVED******REMOVED***  <path d="M7 3h7.5L19 7.5V21H7z" />
 ***REMOVED******REMOVED***  <path d="M14.5 3V7.5H19" />
 ***REMOVED******REMOVED***  <path d="M10 11h5" />
@@ -55,13 +43,7 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED***  );
 ***REMOVED***case 'customers':
 ***REMOVED***  return (
-***REMOVED******REMOVED***<svg
-***REMOVED******REMOVED***  aria-hidden
-***REMOVED******REMOVED***  viewBox="0 0 24 24"
-***REMOVED******REMOVED***  className={base}
-***REMOVED******REMOVED***  fill="none"
-***REMOVED******REMOVED***  strokeWidth={1.6}
-***REMOVED******REMOVED***>
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
 ***REMOVED******REMOVED***  <circle cx="9" cy="9" r="3.2" />
 ***REMOVED******REMOVED***  <path d="M4.5 18.5C5.4 16.3 7.2 15 9 15s3.6 1.3 4.5 3.5" />
 ***REMOVED******REMOVED***  <circle cx="17" cy="8" r="2.4" />
@@ -70,13 +52,7 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED***  );
 ***REMOVED***case 'receipts':
 ***REMOVED***  return (
-***REMOVED******REMOVED***<svg
-***REMOVED******REMOVED***  aria-hidden
-***REMOVED******REMOVED***  viewBox="0 0 24 24"
-***REMOVED******REMOVED***  className={base}
-***REMOVED******REMOVED***  fill="none"
-***REMOVED******REMOVED***  strokeWidth={1.6}
-***REMOVED******REMOVED***>
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
 ***REMOVED******REMOVED***  <path d="M7 3.5 9 5l2-1.5L13 5l2-1.5L17 5l2-1.5V20l-2-1.5-2 1.5-2-1.5L9 20l-2-1.5L5 20V4z" />
 ***REMOVED******REMOVED***  <path d="M9 9.5h6" />
 ***REMOVED******REMOVED***  <path d="M9 13h4" />
@@ -84,13 +60,7 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED***  );
 ***REMOVED***case 'vat':
 ***REMOVED***  return (
-***REMOVED******REMOVED***<svg
-***REMOVED******REMOVED***  aria-hidden
-***REMOVED******REMOVED***  viewBox="0 0 24 24"
-***REMOVED******REMOVED***  className={base}
-***REMOVED******REMOVED***  fill="none"
-***REMOVED******REMOVED***  strokeWidth={1.6}
-***REMOVED******REMOVED***>
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
 ***REMOVED******REMOVED***  <path d="M5 18c1.2-2.8 3.4-4.5 6-4.5 2.6 0 4.8 1.7 6 4.5" />
 ***REMOVED******REMOVED***  <circle cx="11" cy="9" r="3.2" />
 ***REMOVED******REMOVED***  <path d="M17 4v7" />
@@ -98,16 +68,14 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
 ***REMOVED***case 'settings':
+***REMOVED***  // Simpel, strak tandwiel
 ***REMOVED***  return (
-***REMOVED******REMOVED***<svg
-***REMOVED******REMOVED***  aria-hidden
-***REMOVED******REMOVED***  viewBox="0 0 24 24"
-***REMOVED******REMOVED***  className={base}
-***REMOVED******REMOVED***  fill="none"
-***REMOVED******REMOVED***  strokeWidth={1.6}
-***REMOVED******REMOVED***>
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
 ***REMOVED******REMOVED***  <circle cx="12" cy="12" r="3" />
-***REMOVED******REMOVED***  <path d="M4.9 9.5 6.3 8l1.6.3a5 5 0 0 1 1-.6L9.2 6h1.6l.3 1.7a5 5 0 0 1 1 .6L13.7 8l1.4 1.5-.3 1.7a5 5 0 0 1 0 1.2l.3 1.7-1.4 1.5-1.6-.3a5 5 0 0 1-1 .6L10.8 18H9.2l-.3-1.7a5 5 0 0 1-1-.6l-1.6.3L4.9 14.5l.3-1.7a5 5 0 0 1 0-1.2z" />
+***REMOVED******REMOVED***  <path d="M4 12h2.2M17.8 12H20" />
+***REMOVED******REMOVED***  <path d="m7.05 7.05 1.56 1.56m6.78 6.78 1.56 1.56" />
+***REMOVED******REMOVED***  <path d="M12 4v2.2M12 17.8V20" />
+***REMOVED******REMOVED***  <path d="m7.05 16.95 1.56-1.56m6.78-6.78 1.56-1.56" />
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
 ***REMOVED***default:
@@ -115,11 +83,7 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
   }
 }
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);

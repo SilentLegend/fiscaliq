@@ -15,8 +15,32 @@ create table if not exists public.invoices (
   created_at timestamptz not null default now()
 );
 
--- Basis RLS: elke gebruiker ziet alleen zijn eigen facturen
+create table if not exists public.invoice_lines (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  description text not null,
+  quantity numeric(12,2) not null default 1,
+  unit_price numeric(12,2) not null,
+  amount_excl numeric(12,2) not null,
+  created_at timestamptz not null default now()
+);
+
+-- Basis RLS: elke gebruiker ziet alleen zijn eigen facturen en regels
 alter table public.invoices enable row level security;
+alter table public.invoice_lines enable row level security;
 
 create policy "Users can manage own invoices" on public.invoices
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "Users can manage invoice lines via invoices" on public.invoice_lines
+  for all using (
+***REMOVED***exists (
+***REMOVED***  select 1 from public.invoices i
+***REMOVED***  where i.id = invoice_id and i.user_id = auth.uid()
+***REMOVED***)
+  ) with check (
+***REMOVED***exists (
+***REMOVED***  select 1 from public.invoices i
+***REMOVED***  where i.id = invoice_id and i.user_id = auth.uid()
+***REMOVED***)
+  );
