@@ -60,7 +60,8 @@ export default function DashboardPage() {
   const kpis = useMemo(() => {
 ***REMOVED***if (!invoices.length) {
 ***REMOVED***  return {
-***REMOVED******REMOVED***omzetMaand: 0,
+***REMOVED******REMOVED***omzetMaandBruto: 0,
+***REMOVED******REMOVED***omzetMaandNetto: 0,
 ***REMOVED******REMOVED***omzetMaandCount: 0,
 ***REMOVED******REMOVED***openAmount: 0,
 ***REMOVED******REMOVED***openCount: 0,
@@ -81,7 +82,8 @@ export default function DashboardPage() {
 ***REMOVED***  return d >= startOfMonth && d <= now;
 ***REMOVED***});
 
-***REMOVED***const omzetMaand = monthInvoices.reduce((acc, inv) => acc + (inv.amount_incl || 0), 0);
+***REMOVED***const omzetMaandBruto = monthInvoices.reduce((acc, inv) => acc + (inv.amount_incl || 0), 0);
+***REMOVED***const omzetMaandNetto = monthInvoices.reduce((acc, inv) => acc + (inv.amount_excl || 0), 0);
 
 ***REMOVED***// Voor nu: alles wat niet 'betaald' is, telt als openstaand.
 ***REMOVED***const openInvoices = invoices.filter((inv) => inv.status !== 'betaald');
@@ -98,7 +100,8 @@ export default function DashboardPage() {
 ***REMOVED***);
 
 ***REMOVED***return {
-***REMOVED***  omzetMaand,
+***REMOVED***  omzetMaandBruto,
+***REMOVED***  omzetMaandNetto,
 ***REMOVED***  omzetMaandCount: monthInvoices.length,
 ***REMOVED***  openAmount,
 ***REMOVED***  openCount,
@@ -131,12 +134,13 @@ export default function DashboardPage() {
 ***REMOVED***  <section className="grid gap-4 md:grid-cols-3">
 ***REMOVED******REMOVED***<div className="rounded-3xl border border-border bg-bg px-4 py-3">
 ***REMOVED******REMOVED***  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-***REMOVED******REMOVED******REMOVED***Omzet deze maand
+***REMOVED******REMOVED******REMOVED***Omzet deze maand (excl. btw)
 ***REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED***  <div className="mt-2 text-3xl font-semibold tracking-tight text-text">
-***REMOVED******REMOVED******REMOVED***{formatCurrency(kpis.omzetMaand)}
+***REMOVED******REMOVED******REMOVED***{formatCurrency(kpis.omzetMaandNetto)}
 ***REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED***  <div className="mt-1 text-xs font-semibold text-primary">
+***REMOVED******REMOVED******REMOVED***{`Incl. btw: ${formatCurrency(kpis.omzetMaandBruto)} • `}
 ***REMOVED******REMOVED******REMOVED***{kpis.omzetMaandCount === 0
 ***REMOVED******REMOVED******REMOVED***  ? 'Nog geen facturen deze maand'
 ***REMOVED******REMOVED******REMOVED***  : `${kpis.omzetMaandCount} factuur${kpis.omzetMaandCount === 1 ? '' : 'en'} deze maand`}
