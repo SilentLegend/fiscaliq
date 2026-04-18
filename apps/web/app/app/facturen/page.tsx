@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 
 interface Customer {
@@ -141,6 +141,18 @@ export default function FacturenPage() {
 ***REMOVED***loadData();
   }, []);
 
+  const formTotals = useMemo(() => {
+***REMOVED***let totalExcl = 0;
+***REMOVED***form.lines.forEach((line) => {
+***REMOVED***  const q = Number(line.quantity.replace(',', '.')) || 0;
+***REMOVED***  const p = Number(line.unitPrice.replace(',', '.')) || 0;
+***REMOVED***  totalExcl += q * p;
+***REMOVED***});
+***REMOVED***const vat = Number(form.vatRate) || 0;
+***REMOVED***const totalIncl = totalExcl * (1 + vat / 100);
+***REMOVED***return { totalExcl, totalIncl, vat };
+  }, [form.lines, form.vatRate]);
+
   function resetForm() {
 ***REMOVED***setEditingId(null);
 ***REMOVED***setForm({
@@ -165,18 +177,6 @@ export default function FacturenPage() {
 ***REMOVED***  lines: f.lines.filter((_, i) => i !== index),
 ***REMOVED***}));
   }
-
-  const formTotals = useMemo(() => {
-***REMOVED***let totalExcl = 0;
-***REMOVED***form.lines.forEach((line) => {
-***REMOVED***  const q = Number(line.quantity.replace(',', '.')) || 0;
-***REMOVED***  const p = Number(line.unitPrice.replace(',', '.')) || 0;
-***REMOVED***  totalExcl += q * p;
-***REMOVED***});
-***REMOVED***const vat = Number(form.vatRate) || 0;
-***REMOVED***const totalIncl = totalExcl * (1 + vat / 100);
-***REMOVED***return { totalExcl, totalIncl, vat };
-  }, [form.lines, form.vatRate]);
 
   function statusLabel(inv: InvoiceRow): string {
 ***REMOVED***if (!inv.due_date) return 'Zonder vervaldatum';
