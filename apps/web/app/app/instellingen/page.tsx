@@ -33,6 +33,7 @@ export default function InstellingenPage() {
   const [error, setError] = useState<string | null>(null);
   const [enableAutoReminders, setEnableAutoReminders] = useState(false);
   const [enableClientScore, setEnableClientScore] = useState(false);
+  const [testingReminder, setTestingReminder] = useState(false);
 
   useEffect(() => {
 ***REMOVED***async function loadSettings() {
@@ -97,6 +98,45 @@ export default function InstellingenPage() {
   function persistFlags(next: { enableAutoReminders: boolean; enableClientScore: boolean }) {
 ***REMOVED***localStorage.setItem('fiscaliq.featureFlags.v1', JSON.stringify(next));
 ***REMOVED***window.dispatchEvent(new StorageEvent('storage', { key: 'fiscaliq.featureFlags.v1' }));
+  }
+
+  async function testReminder() {
+***REMOVED***setTestingReminder(true);
+***REMOVED***setMessage(null);
+***REMOVED***setError(null);
+***REMOVED***
+***REMOVED***try {
+***REMOVED***  // Fetch invoices to find ones that are overdue
+***REMOVED***  const { data: invoices, error: invoicesError } = await supabase
+***REMOVED******REMOVED***.from('invoices')
+***REMOVED******REMOVED***.select('*')
+***REMOVED******REMOVED***.eq('status', 'open')
+***REMOVED******REMOVED***.order('due_date', { ascending: true });
+
+***REMOVED***  if (invoicesError) {
+***REMOVED******REMOVED***setError('Kon openstaande facturen niet ophalen.');
+***REMOVED******REMOVED***setTestingReminder(false);
+***REMOVED******REMOVED***return;
+***REMOVED***  }
+
+***REMOVED***  const now = new Date();
+***REMOVED***  const overdueInvoices = (invoices as any[] || []).filter((inv) => {
+***REMOVED******REMOVED***const dueDate = new Date(inv.due_date);
+***REMOVED******REMOVED***return dueDate < now;
+***REMOVED***  });
+
+***REMOVED***  if (overdueInvoices.length === 0) {
+***REMOVED******REMOVED***setMessage('✓ Herinnering test geslaagd! Er zijn geen vervallen facturen om te herinneren.');
+***REMOVED***  } else {
+***REMOVED******REMOVED***const count = overdueInvoices.length;
+***REMOVED******REMOVED***setMessage(`✓ Herinnering test geslaagd! Zou ${count} klant(en) herinneren voor vervallen factuur${count !== 1 ? 'en' : ''}.`);
+***REMOVED***  }
+***REMOVED***} catch (err) {
+***REMOVED***  console.error('Reminder test error:', err);
+***REMOVED***  setError('Herinnering test mislukt. Controleer de console.');
+***REMOVED***}
+***REMOVED***
+***REMOVED***setTestingReminder(false);
   }
 
   return (
@@ -271,21 +311,31 @@ export default function InstellingenPage() {
 ***REMOVED******REMOVED******REMOVED***<div className="rounded-2xl border border-border bg-surface p-3">
 ***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Experimentele features</div>
 ***REMOVED******REMOVED******REMOVED***  <div className="mt-2 space-y-2">
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="flex items-center justify-between gap-3 text-xs">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <span>Automatische herinneringen</span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <input
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="checkbox"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***checked={enableAutoReminders}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  const next = {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableAutoReminders: e.target.checked,
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableClientScore,
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  };
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  setEnableAutoReminders(next.enableAutoReminders);
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  persistFlags(next);
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}}
-***REMOVED******REMOVED******REMOVED******REMOVED***  />
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex items-center justify-between gap-3">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="flex items-center justify-between gap-3 text-xs flex-1">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Automatische herinneringen</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<input
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="checkbox"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  checked={enableAutoReminders}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const next = {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  enableAutoReminders: e.target.checked,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  enableClientScore,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***};
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***setEnableAutoReminders(next.enableAutoReminders);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***persistFlags(next);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  }}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***/>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onClick={testReminder}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***disabled={!enableAutoReminders || testingReminder}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="ml-2 rounded-full border border-border px-3 py-1 text-xs text-text hover:bg-surface-offset disabled:cursor-not-allowed disabled:opacity-50"
+***REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{testingReminder ? 'Testen…' : 'Test'}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<label className="flex items-center justify-between gap-3 text-xs">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <span>Klantscore-tabblad</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <input

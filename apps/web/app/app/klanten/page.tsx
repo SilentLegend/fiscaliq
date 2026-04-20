@@ -62,6 +62,11 @@ function makeCustomerNumber() {
   return `KL-${Date.now().toString().slice(-6)}`;
 }
 
+function capitalizeFirst(text: string): string {
+  if (!text) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+
 function makeEmptyForm(): Omit<CustomerRecord, 'id'> {
   return {
 ***REMOVED***customerNumber: makeCustomerNumber(),
@@ -381,7 +386,15 @@ export default function KlantenPage() {
 ***REMOVED***  </section>
 
 ***REMOVED***  {showForm && (
-***REMOVED******REMOVED***<div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4 py-6">
+***REMOVED******REMOVED***<div
+***REMOVED******REMOVED***  className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4 py-6"
+***REMOVED******REMOVED***  onClick={(e) => {
+***REMOVED******REMOVED******REMOVED***if (e.target === e.currentTarget) {
+***REMOVED******REMOVED******REMOVED***  setShowForm(false);
+***REMOVED******REMOVED******REMOVED***  resetForm();
+***REMOVED******REMOVED******REMOVED***}
+***REMOVED******REMOVED***  }}
+***REMOVED******REMOVED***>
 ***REMOVED******REMOVED***  <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[1.8rem] border border-border bg-surface p-6 shadow-soft">
 ***REMOVED******REMOVED******REMOVED***<div className="mb-4 flex items-center justify-between">
 ***REMOVED******REMOVED******REMOVED***  <div>
@@ -469,7 +482,7 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  required
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  value={form.contactName}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, contactName: capitalizeFirst(e.target.value) }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***/>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </Field>
@@ -494,7 +507,7 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<input
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  value={form.department}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, department: capitalizeFirst(e.target.value) }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***/>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </Field>
@@ -510,7 +523,7 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<input
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  value={form.streetAndNumber}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, streetAndNumber: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, streetAndNumber: capitalizeFirst(e.target.value) }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***/>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </Field>
@@ -526,7 +539,7 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<input
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  value={form.city}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, city: capitalizeFirst(e.target.value) }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***/>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </Field>
@@ -534,7 +547,7 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<input
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  value={form.country}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setForm((f) => ({ ...f, country: capitalizeFirst(e.target.value) }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***/>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </Field>
@@ -672,7 +685,14 @@ export default function KlantenPage() {
 ***REMOVED***  )}
 
 ***REMOVED***  {deleteTarget && (
-***REMOVED******REMOVED***<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6">
+***REMOVED******REMOVED***<div
+***REMOVED******REMOVED***  className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6"
+***REMOVED******REMOVED***  onClick={(e) => {
+***REMOVED******REMOVED******REMOVED***if (e.target === e.currentTarget) {
+***REMOVED******REMOVED******REMOVED***  setDeleteTarget(null);
+***REMOVED******REMOVED******REMOVED***}
+***REMOVED******REMOVED***  }}
+***REMOVED******REMOVED***>
 ***REMOVED******REMOVED***  <div className="w-full max-w-sm rounded-[1.6rem] border border-border bg-surface p-5 shadow-soft">
 ***REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">Klant verwijderen</h2>
 ***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">

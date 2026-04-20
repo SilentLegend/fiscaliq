@@ -291,9 +291,17 @@ export default function FacturenPage() {
 ***REMOVED***if (channel === 'whatsapp') {
 ***REMOVED***  const cleaned = (customer?.phone || '').replace(/[^\d+]/g, '');
 ***REMOVED***  const phone = cleaned ? cleaned.replace(/^0/, '31') : '';
+***REMOVED***  
+***REMOVED***  // Generate PDF and create download link
+***REMOVED***  const lines = linesByInvoice[inv.id] ?? [];
+***REMOVED***  const doc = generateInvoicePdf(inv, lines);
+***REMOVED***  const pdfBlob = doc.output('blob') as Blob;
+***REMOVED***  const pdfUrl = URL.createObjectURL(pdfBlob);
+***REMOVED***  
+***REMOVED***  const fullMessage = `${message}\n\nDownload factuur: ${pdfUrl}`;
 ***REMOVED***  const url = phone
-***REMOVED******REMOVED***? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
-***REMOVED******REMOVED***: `https://wa.me/?text=${encodeURIComponent(message)}`;
+***REMOVED******REMOVED***? `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`
+***REMOVED******REMOVED***: `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
 ***REMOVED***  window.open(url, '_blank');
 ***REMOVED***  setShareTarget(null);
 ***REMOVED***  return;
@@ -1359,7 +1367,14 @@ export default function FacturenPage() {
 ***REMOVED***  )}
 
 ***REMOVED***  {shareTarget && (
-***REMOVED******REMOVED***<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6">
+***REMOVED******REMOVED***<div
+***REMOVED******REMOVED***  className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6"
+***REMOVED******REMOVED***  onClick={(e) => {
+***REMOVED******REMOVED******REMOVED***if (e.target === e.currentTarget) {
+***REMOVED******REMOVED******REMOVED***  setShareTarget(null);
+***REMOVED******REMOVED******REMOVED***}
+***REMOVED******REMOVED***  }}
+***REMOVED******REMOVED***>
 ***REMOVED******REMOVED***  <div className="w-full max-w-sm rounded-[1.6rem] border border-border bg-surface p-5 shadow-soft">
 ***REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">Factuur delen</h2>
 ***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">
@@ -1403,7 +1418,14 @@ export default function FacturenPage() {
 ***REMOVED***  )}
 
 ***REMOVED***  {deleteTarget && (
-***REMOVED******REMOVED***<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6">
+***REMOVED******REMOVED***<div
+***REMOVED******REMOVED***  className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6"
+***REMOVED******REMOVED***  onClick={(e) => {
+***REMOVED******REMOVED******REMOVED***if (e.target === e.currentTarget) {
+***REMOVED******REMOVED******REMOVED***  setDeleteTarget(null);
+***REMOVED******REMOVED******REMOVED***}
+***REMOVED******REMOVED***  }}
+***REMOVED******REMOVED***>
 ***REMOVED******REMOVED***  <div className="w-full max-w-sm rounded-[1.6rem] border border-border bg-surface p-5 shadow-soft">
 ***REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">Factuur verwijderen</h2>
 ***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">
