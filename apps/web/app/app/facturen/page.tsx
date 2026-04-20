@@ -27,6 +27,7 @@ interface InvoiceForm {
   customerName: string;
   vatRate: string;
   dueDate: string;
+  paymentTermDays: string;
   lines: InvoiceLineForm[];
 }
 
@@ -79,6 +80,7 @@ export default function FacturenPage() {
 ***REMOVED***customerName: '',
 ***REMOVED***vatRate: '21',
 ***REMOVED***dueDate: '',
+***REMOVED***paymentTermDays: '30',
 ***REMOVED***lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
 
@@ -161,6 +163,7 @@ export default function FacturenPage() {
 ***REMOVED***  customerName: '',
 ***REMOVED***  vatRate: '21',
 ***REMOVED***  dueDate: '',
+***REMOVED***  paymentTermDays: '30',
 ***REMOVED***  lines: [{ description: '', quantity: '1', unitPrice: '' }],
 ***REMOVED***});
   }
@@ -232,6 +235,14 @@ export default function FacturenPage() {
 ***REMOVED***const vat = Number(form.vatRate) || 0;
 ***REMOVED***const totalInclLocal = totalExclLocal * (1 + vat / 100);
 
+***REMOVED***const computedDueDate =
+***REMOVED***  form.dueDate ||
+***REMOVED***  (() => {
+***REMOVED******REMOVED***const d = new Date();
+***REMOVED******REMOVED***d.setDate(d.getDate() + (Number(form.paymentTermDays) || 30));
+***REMOVED******REMOVED***return d.toISOString().slice(0, 10);
+***REMOVED***  })();
+
 ***REMOVED***try {
 ***REMOVED***  if (!editingId) {
 ***REMOVED******REMOVED***const { data: inserted, error: invError } = await supabase
@@ -241,7 +252,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
 ***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
-***REMOVED******REMOVED******REMOVED***due_date: form.dueDate || null,
+***REMOVED******REMOVED******REMOVED***due_date: computedDueDate || null,
 ***REMOVED******REMOVED******REMOVED***status: 'concept',
 ***REMOVED******REMOVED***  })
 ***REMOVED******REMOVED***  .select('id')
@@ -283,7 +294,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
 ***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
-***REMOVED******REMOVED******REMOVED***due_date: form.dueDate || null,
+***REMOVED******REMOVED******REMOVED***due_date: computedDueDate || null,
 ***REMOVED******REMOVED***  })
 ***REMOVED******REMOVED***  .eq('id', editingId);
 ***REMOVED******REMOVED***if (invError) {
@@ -358,12 +369,26 @@ export default function FacturenPage() {
 ***REMOVED***  setLinesByInvoice((prev) => ({ ...prev, [inv.id]: lines }));
 ***REMOVED***}
 
+***REMOVED***let paymentTermDays = '30';
+***REMOVED***if (inv.issue_date && inv.due_date) {
+***REMOVED***  const issue = new Date(inv.issue_date);
+***REMOVED***  const due = new Date(inv.due_date);
+***REMOVED***  if (!Number.isNaN(issue.getTime()) && !Number.isNaN(due.getTime())) {
+***REMOVED******REMOVED***const diffMs = due.getTime() - issue.getTime();
+***REMOVED******REMOVED***const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+***REMOVED******REMOVED***if (diffDays === 30 || diffDays === 60 || diffDays === 90) {
+***REMOVED******REMOVED***  paymentTermDays = String(diffDays);
+***REMOVED******REMOVED***}
+***REMOVED***  }
+***REMOVED***}
+
 ***REMOVED***setEditingId(inv.id);
 ***REMOVED***setForm({
 ***REMOVED***  customerId: '',
 ***REMOVED***  customerName: inv.customer_name,
 ***REMOVED***  vatRate: String(inv.vat_rate),
 ***REMOVED***  dueDate: inv.due_date ?? '',
+***REMOVED***  paymentTermDays,
 ***REMOVED***  lines:
 ***REMOVED******REMOVED***lines.length > 0
 ***REMOVED******REMOVED***  ? lines.map((l) => ({
@@ -392,124 +417,241 @@ export default function FacturenPage() {
   function handleDownloadPdf(inv: InvoiceRow) {
 ***REMOVED***const lines = linesByInvoice[inv.id] ?? [];
 ***REMOVED***const doc = new jsPDF();
-***REMOVED***const marginLeft = 20;
-***REMOVED***let cursorY = 20;
+***REMOVED***const pageHeight = doc.internal.pageSize.getHeight();
 
-***REMOVED***// Bedrijfskop
-***REMOVED***if (companySettings) {
-***REMOVED***  doc.setFont('helvetica', 'bold');
-***REMOVED***  doc.setFontSize(12);
-***REMOVED***  doc.text(companySettings.company_name || '-', marginLeft, cursorY);
-***REMOVED***  doc.setFontSize(9);
-***REMOVED***  doc.setFont('helvetica', 'normal');
-***REMOVED***  cursorY += 5;
-***REMOVED***  if (companySettings.street) doc.text(companySettings.street, marginLeft, cursorY);
-***REMOVED***  if (companySettings.postal_code || companySettings.city) {
-***REMOVED******REMOVED***cursorY += 4;
-***REMOVED******REMOVED***doc.text(
-***REMOVED******REMOVED***  `${companySettings.postal_code ?? ''} ${companySettings.city ?? ''}`.trim(),
-***REMOVED******REMOVED***  marginLeft,
-***REMOVED******REMOVED***  cursorY,
-***REMOVED******REMOVED***);
+***REMOVED***const leftX = 20;
+***REMOVED***const rightX = 125;
+***REMOVED***const contentRight = 190;
+***REMOVED***let cursorY = 24;
+
+***REMOVED***const customer = customers.find((c) => c.name === inv.customer_name);
+
+***REMOVED***const issueDateText = inv.issue_date?.slice(0, 10) || '-';
+***REMOVED***const dueDateText = inv.due_date?.slice(0, 10) || '-';
+
+***REMOVED***const issueDate = inv.issue_date ? new Date(inv.issue_date) : null;
+***REMOVED***const dueDate = inv.due_date ? new Date(inv.due_date) : null;
+
+***REMOVED***let paymentTermDaysNumeric = 30;
+***REMOVED***if (issueDate && dueDate && !Number.isNaN(issueDate.getTime()) && !Number.isNaN(dueDate.getTime())) {
+***REMOVED***  const diffMs = dueDate.getTime() - issueDate.getTime();
+***REMOVED***  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+***REMOVED***  if (diffDays === 30 || diffDays === 60 || diffDays === 90) {
+***REMOVED******REMOVED***paymentTermDaysNumeric = diffDays;
 ***REMOVED***  }
-***REMOVED***  if (companySettings.kvk || companySettings.vat_number) {
-***REMOVED******REMOVED***cursorY += 4;
-***REMOVED******REMOVED***const kvkVat = [
-***REMOVED******REMOVED***  companySettings.kvk ? `KVK: ${companySettings.kvk}` : null,
-***REMOVED******REMOVED***  companySettings.vat_number ? `Btw: ${companySettings.vat_number}` : null,
-***REMOVED******REMOVED***]
-***REMOVED******REMOVED***  .filter(Boolean)
-***REMOVED******REMOVED***  .join('  |  ');
-***REMOVED******REMOVED***if (kvkVat) doc.text(kvkVat, marginLeft, cursorY);
-***REMOVED***  }
-***REMOVED***  if (companySettings.iban) {
-***REMOVED******REMOVED***cursorY += 4;
-***REMOVED******REMOVED***doc.text(`IBAN: ${companySettings.iban}`, marginLeft, cursorY);
-***REMOVED***  }
-***REMOVED***  if (companySettings.email || companySettings.website) {
-***REMOVED******REMOVED***cursorY += 4;
-***REMOVED******REMOVED***const contact = [
-***REMOVED******REMOVED***  companySettings.email ? companySettings.email : null,
-***REMOVED******REMOVED***  companySettings.website ? companySettings.website : null,
-***REMOVED******REMOVED***]
-***REMOVED******REMOVED***  .filter(Boolean)
-***REMOVED******REMOVED***  .join('  |  ');
-***REMOVED******REMOVED***if (contact) doc.text(contact, marginLeft, cursorY);
-***REMOVED***  }
-***REMOVED***  cursorY += 8;
 ***REMOVED***}
 
-***REMOVED***// Factuurkop
+***REMOVED***const formatCurrency = (value: number) => `€ ${value.toFixed(2).replace('.', ',')}`;
+
+***REMOVED***const drawLabelValue = (label: string, value: string, y: number) => {
+***REMOVED***  doc.setFont('helvetica', 'normal');
+***REMOVED***  doc.text(label, leftX, y);
+***REMOVED***  doc.text(`: ${value}`, leftX + 36, y);
+***REMOVED***};
+
+***REMOVED***const drawRightAligned = (text: string, x: number, y: number) => {
+***REMOVED***  doc.text(text, x, y, { align: 'right' });
+***REMOVED***};
+
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***doc.setFontSize(11);
+
+***REMOVED***// Bedrijf linksboven
+***REMOVED***if (companySettings) {
+***REMOVED***  doc.text(companySettings.company_name || '-', leftX, cursorY);
+***REMOVED***  cursorY += 10;
+
+***REMOVED***  if (companySettings.street) {
+***REMOVED******REMOVED***doc.text(companySettings.street, leftX, cursorY);
+***REMOVED******REMOVED***cursorY += 6;
+***REMOVED***  }
+
+***REMOVED***  const companyCityLine = `${companySettings.postal_code ?? ''} ${companySettings.city ?? ''}`.trim();
+***REMOVED***  if (companyCityLine) {
+***REMOVED******REMOVED***doc.text(companyCityLine, leftX, cursorY);
+***REMOVED******REMOVED***cursorY += 6;
+***REMOVED***  }
+
+***REMOVED***  doc.setDrawColor(190);
+***REMOVED***  doc.line(leftX, cursorY, 82, cursorY);
+***REMOVED***}
+
+***REMOVED***// Klant rechtsboven
+***REMOVED***let rightCursorY = 24;
 ***REMOVED***doc.setFont('helvetica', 'bold');
-***REMOVED***doc.setFontSize(16);
-***REMOVED***doc.text('FACTUUR', marginLeft, cursorY);
+***REMOVED***doc.text(customer?.name || inv.customer_name || '-', rightX, rightCursorY);
+***REMOVED***rightCursorY += 8;
+
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***if (customer?.street) {
+***REMOVED***  doc.text(customer.street, rightX, rightCursorY);
+***REMOVED***  rightCursorY += 6;
+***REMOVED***}
+
+***REMOVED***const customerCityLine = `${customer?.postal_code ?? ''} ${customer?.city ?? ''}`.trim();
+***REMOVED***if (customerCityLine) {
+***REMOVED***  doc.text(customerCityLine, rightX, rightCursorY);
+***REMOVED***  rightCursorY += 10;
+***REMOVED***}
+
+***REMOVED***if (customer?.kvk) {
+***REMOVED***  doc.text(`KvK-nummer: ${customer.kvk}`, rightX, rightCursorY);
+***REMOVED***  rightCursorY += 6;
+***REMOVED***}
+
+***REMOVED***if (customer?.vat_number) {
+***REMOVED***  doc.text(`BTW-id: ${customer.vat_number}`, rightX, rightCursorY);
+***REMOVED***  rightCursorY += 6;
+***REMOVED***}
+
+***REMOVED***doc.setDrawColor(190);
+***REMOVED***doc.line(rightX, rightCursorY + 2, contentRight, rightCursorY + 2);
+
+***REMOVED***// Titelblok
+***REMOVED***cursorY = 92;
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***doc.setFontSize(22);
+***REMOVED***doc.text('Factuur', leftX, cursorY);
+
+***REMOVED***doc.setDrawColor(190);
+***REMOVED***doc.line(leftX, cursorY + 4, contentRight, cursorY + 4);
+
+***REMOVED***cursorY += 14;
+***REMOVED***doc.setFontSize(11);
+***REMOVED***drawLabelValue('Factuurnummer', inv.id.slice(0, 8).toUpperCase(), cursorY);
+***REMOVED***cursorY += 7;
+***REMOVED***drawLabelValue('Factuurdatum', issueDateText, cursorY);
+***REMOVED***cursorY += 7;
+***REMOVED***drawLabelValue('Vervaldatum', dueDateText, cursorY);
+
+***REMOVED***// Tabelkop
+***REMOVED***cursorY += 14;
+***REMOVED***const colDesc = leftX;
+***REMOVED***const colQty = 118;
+***REMOVED***const colAmount = 146;
+***REMOVED***const colVat = 162;
+***REMOVED***const colTotal = 189;
+
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text('Omschrijving', colDesc, cursorY);
+***REMOVED***drawRightAligned('Aantal', colQty, cursorY);
+***REMOVED***drawRightAligned('Bedrag', colAmount, cursorY);
+***REMOVED***drawRightAligned('BTW', colVat, cursorY);
+***REMOVED***drawRightAligned('Totaal', colTotal, cursorY);
+
+***REMOVED***cursorY += 5;
+***REMOVED***doc.setDrawColor(120);
+***REMOVED***doc.line(leftX, cursorY, contentRight, cursorY);
+
+***REMOVED***// Regels
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***const vatMultiplier = 1 + (inv.vat_rate ?? 0) / 100;
+
+***REMOVED***lines.forEach((line) => {
+***REMOVED***  cursorY += 8;
+
+***REMOVED***  if (cursorY > 235) {
+***REMOVED******REMOVED***doc.addPage();
+***REMOVED******REMOVED***cursorY = 20;
+
+***REMOVED******REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED******REMOVED***doc.text('Omschrijving', colDesc, cursorY);
+***REMOVED******REMOVED***drawRightAligned('Aantal', colQty, cursorY);
+***REMOVED******REMOVED***drawRightAligned('Bedrag', colAmount, cursorY);
+***REMOVED******REMOVED***drawRightAligned('BTW', colVat, cursorY);
+***REMOVED******REMOVED***drawRightAligned('Totaal', colTotal, cursorY);
+
+***REMOVED******REMOVED***cursorY += 5;
+***REMOVED******REMOVED***doc.setDrawColor(120);
+***REMOVED******REMOVED***doc.line(leftX, cursorY, contentRight, cursorY);
+***REMOVED******REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED******REMOVED***cursorY += 3;
+***REMOVED***  }
+
+***REMOVED***  const descriptionLines = doc.splitTextToSize(line.description || '-', 92);
+***REMOVED***  const lineVatRate = `${(inv.vat_rate ?? 0).toFixed(0)}%`;
+***REMOVED***  const lineTotal = line.amount_excl * vatMultiplier;
+***REMOVED***  const startY = cursorY;
+
+***REMOVED***  doc.text(descriptionLines, colDesc, startY);
+***REMOVED***  drawRightAligned(String(line.quantity), colQty, startY);
+***REMOVED***  drawRightAligned(formatCurrency(line.amount_excl), colAmount, startY);
+***REMOVED***  drawRightAligned(lineVatRate, colVat, startY);
+***REMOVED***  drawRightAligned(formatCurrency(lineTotal), colTotal, startY);
+
+***REMOVED***  cursorY = startY + descriptionLines.length * 6;
+***REMOVED***  doc.setDrawColor(220);
+***REMOVED***  doc.line(leftX, cursorY, contentRight, cursorY);
+***REMOVED***});
+
+***REMOVED***// Totalen
+***REMOVED***const totalExcl = inv.amount_excl ?? 0;
+***REMOVED***const vatAmount = (inv.amount_incl ?? 0) - totalExcl;
+***REMOVED***const totalIncl = inv.amount_incl ?? 0;
+
+***REMOVED***cursorY += 10;
+***REMOVED***const totalsLabelX = 116;
+***REMOVED***const totalsValueX = 189;
+
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text('Totaal exclusief BTW:', totalsLabelX, cursorY);
+***REMOVED***drawRightAligned(formatCurrency(totalExcl), totalsValueX, cursorY);
+
+***REMOVED***cursorY += 8;
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***doc.text(`BTW (${(inv.vat_rate ?? 0).toFixed(0)}%):`, totalsLabelX, cursorY);
+***REMOVED***drawRightAligned(formatCurrency(vatAmount), totalsValueX, cursorY);
+
+***REMOVED***cursorY += 8;
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text('Totaal:', totalsLabelX, cursorY);
+***REMOVED***drawRightAligned(formatCurrency(totalIncl), totalsValueX, cursorY);
+
+***REMOVED***doc.setDrawColor(150);
+***REMOVED***doc.line(totalsLabelX, cursorY + 2, totalsValueX, cursorY + 2);
+
+***REMOVED***// Onderste vakken
+***REMOVED***const boxY = pageHeight - 52;
+***REMOVED***const boxH = 18;
+***REMOVED***const boxW = 58;
+***REMOVED***const gap = 6;
+***REMOVED***const box1X = 24;
+***REMOVED***const box2X = box1X + boxW + gap;
+***REMOVED***const box3X = box2X + boxW + gap;
+
+***REMOVED***doc.setDrawColor(80);
+***REMOVED***doc.rect(box1X, boxY, boxW, boxH);
+***REMOVED***doc.rect(box2X, boxY, boxW, boxH);
+***REMOVED***doc.rect(box3X, boxY, boxW, boxH);
+
+***REMOVED***doc.setFontSize(9);
+***REMOVED***doc.setFont('helvetica', 'normal');
+
+***REMOVED***doc.text('IBAN-nummer', box1X + boxW / 2, boxY + 7, { align: 'center' });
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text(companySettings?.iban || '-', box1X + boxW / 2, boxY + 13, { align: 'center' });
+
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***doc.text('Factuurnummer', box2X + boxW / 2, boxY + 7, { align: 'center' });
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text(inv.id.slice(0, 8).toUpperCase(), box2X + boxW / 2, boxY + 13, { align: 'center' });
+
+***REMOVED***doc.setFont('helvetica', 'normal');
+***REMOVED***doc.text('Factuurbedrag', box3X + boxW / 2, boxY + 7, { align: 'center' });
+***REMOVED***doc.setFont('helvetica', 'bold');
+***REMOVED***doc.text(formatCurrency(totalIncl), box3X + boxW / 2, boxY + 13, { align: 'center' });
+
+***REMOVED***// Betaaltekst
+***REMOVED***const paymentText = `Het openstaande bedrag van ${formatCurrency(
+***REMOVED***  totalIncl,
+***REMOVED***)} dient binnen ${paymentTermDaysNumeric} dagen overgemaakt te zijn op rekeningnummer ${
+***REMOVED***  companySettings?.iban || '-'
+***REMOVED***} onder vermelding van het factuurnummer ${inv.id.slice(0, 8).toUpperCase()}.`;
 
 ***REMOVED***doc.setFontSize(10);
 ***REMOVED***doc.setFont('helvetica', 'normal');
-***REMOVED***cursorY += 8;
-***REMOVED***doc.text(`Factuurnummer: ${inv.id.slice(0, 8).toUpperCase()}`, marginLeft, cursorY);
-***REMOVED***cursorY += 5;
-***REMOVED***doc.text(`Factuurdatum: ${inv.issue_date?.slice(0, 10) || '-'}`, marginLeft, cursorY);
-***REMOVED***cursorY += 5;
-***REMOVED***doc.text(`Vervaldatum: ${inv.due_date?.slice(0, 10) || '-'}`, marginLeft, cursorY);
-
-***REMOVED***// Klantblok
-***REMOVED***cursorY += 10;
-***REMOVED***doc.setFont('helvetica', 'bold');
-***REMOVED***doc.text('Klant', marginLeft, cursorY);
-***REMOVED***doc.setFont('helvetica', 'normal');
-***REMOVED***cursorY += 5;
-***REMOVED***doc.text(inv.customer_name || '-', marginLeft, cursorY);
-
-***REMOVED***cursorY += 10;
-***REMOVED***doc.setFont('helvetica', 'bold');
-***REMOVED***doc.text('Omschrijving', marginLeft, cursorY);
-***REMOVED***doc.text('Aantal', marginLeft + 90, cursorY);
-***REMOVED***doc.text('Prijs', marginLeft + 120, cursorY);
-***REMOVED***doc.text('Totaal', marginLeft + 150, cursorY);
-
-***REMOVED***cursorY += 4;
-***REMOVED***doc.setDrawColor(200);
-***REMOVED***doc.line(marginLeft, cursorY, 190, cursorY);
-
-***REMOVED***doc.setFont('helvetica', 'normal');
-***REMOVED***cursorY += 6;
-
-***REMOVED***lines.forEach((line) => {
-***REMOVED***  if (cursorY > 260) {
-***REMOVED******REMOVED***doc.addPage();
-***REMOVED******REMOVED***cursorY = 20;
-***REMOVED***  }
-***REMOVED***  doc.text(line.description || '-', marginLeft, cursorY);
-***REMOVED***  doc.text(String(line.quantity), marginLeft + 90, cursorY, { align: 'right' });
-***REMOVED***  doc.text(line.unit_price.toFixed(2), marginLeft + 120, cursorY, { align: 'right' });
-***REMOVED***  doc.text(line.amount_excl.toFixed(2), marginLeft + 150, cursorY, { align: 'right' });
-***REMOVED***  cursorY += 6;
-***REMOVED***});
-
-***REMOVED***cursorY += 4;
-***REMOVED***doc.setDrawColor(200);
-***REMOVED***doc.line(marginLeft, cursorY, 190, cursorY);
-***REMOVED***cursorY += 6;
-
-***REMOVED***const totalExcl = inv.amount_excl ?? 0;
-***REMOVED***const vatAmount = (inv.amount_incl ?? 0) - totalExcl;
-
-***REMOVED***doc.text(`Subtotaal (excl. btw): € ${totalExcl.toFixed(2)}`, marginLeft, cursorY);
-***REMOVED***cursorY += 5;
-***REMOVED***doc.text(`Btw (${inv.vat_rate.toFixed(0)}%): € ${vatAmount.toFixed(2)}`, marginLeft, cursorY);
-***REMOVED***cursorY += 5;
-***REMOVED***doc.text(`Totaal (incl. btw): € ${inv.amount_incl.toFixed(2)}`, marginLeft, cursorY);
-
-***REMOVED***cursorY += 10;
-***REMOVED***if (companySettings?.iban) {
-***REMOVED***  doc.setFont('helvetica', 'normal');
-***REMOVED***  doc.text(
-***REMOVED******REMOVED***`Gelieve dit bedrag binnen de betalingstermijn over te maken op IBAN ${companySettings.iban}.`,
-***REMOVED******REMOVED***marginLeft,
-***REMOVED******REMOVED***cursorY,
-***REMOVED***  );
-***REMOVED***}
+***REMOVED***const paymentLines = doc.splitTextToSize(paymentText, 165);
+***REMOVED***doc.text(paymentLines, 24, pageHeight - 18);
 
 ***REMOVED***doc.save(`factuur-${inv.id.slice(0, 8)}.pdf`);
   }
@@ -747,6 +889,21 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
 ***REMOVED******REMOVED******REMOVED******REMOVED***  />
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***<div>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="paymentTermDays">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Betalingstermijn
+***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <select
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***id="paymentTermDays"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***value={form.paymentTermDays}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setForm((f) => ({ ...f, paymentTermDays: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+***REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="30">30 dagen</option>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="60">60 dagen</option>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="90">90 dagen</option>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </select>
+***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED***  </div>
 
 ***REMOVED******REMOVED******REMOVED***  <div className="mt-2 space-y-3 rounded-2xl border border-border bg-surface-2 p-3">
@@ -771,7 +928,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***setForm((f) => ({
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ...f,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  lines: f.lines.map((l, i) =>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***i === index ? { ...l, description: value } : l
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***i === index ? { ...l, description: value } : l,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ),
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}));
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  }}
@@ -791,7 +948,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***setForm((f) => ({
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ...f,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  lines: f.lines.map((l, i) =>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***i === index ? { ...l, quantity: value } : l
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***i === index ? { ...l, quantity: value } : l,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ),
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}));
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  }}
@@ -811,7 +968,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***setForm((f) => ({
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ...f,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  lines: f.lines.map((l, i) =>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***i === index ? { ...l, unitPrice: value } : l
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***i === index ? { ...l, unitPrice: value } : l,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ),
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}));
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  }}
