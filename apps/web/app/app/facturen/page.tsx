@@ -156,6 +156,24 @@ export default function FacturenPage() {
 ***REMOVED***return { totalExcl, totalIncl, vat };
   }, [form.lines, form.vatRate]);
 
+  function formatDateNl(value: string | null | undefined): string {
+***REMOVED***if (!value) return '-';
+***REMOVED***const d = new Date(value);
+***REMOVED***if (Number.isNaN(d.getTime())) return '-';
+***REMOVED***return d.toLocaleDateString('nl-NL');
+  }
+
+  function formatCurrencyNl(value: number): string {
+***REMOVED***return `€ ${value.toFixed(2).replace('.', ',')}`;
+  }
+
+  const effectiveDueDate = useMemo(() => {
+***REMOVED***if (form.dueDate) return form.dueDate;
+***REMOVED***const d = new Date();
+***REMOVED***d.setDate(d.getDate() + (Number(form.paymentTermDays) || 30));
+***REMOVED***return d.toISOString().slice(0, 10);
+  }, [form.dueDate, form.paymentTermDays]);
+
   function resetForm() {
 ***REMOVED***setEditingId(null);
 ***REMOVED***setForm({
@@ -235,13 +253,7 @@ export default function FacturenPage() {
 ***REMOVED***const vat = Number(form.vatRate) || 0;
 ***REMOVED***const totalInclLocal = totalExclLocal * (1 + vat / 100);
 
-***REMOVED***const computedDueDate =
-***REMOVED***  form.dueDate ||
-***REMOVED***  (() => {
-***REMOVED******REMOVED***const d = new Date();
-***REMOVED******REMOVED***d.setDate(d.getDate() + (Number(form.paymentTermDays) || 30));
-***REMOVED******REMOVED***return d.toISOString().slice(0, 10);
-***REMOVED***  })();
+***REMOVED***const computedDueDate = effectiveDueDate;
 
 ***REMOVED***try {
 ***REMOVED***  if (!editingId) {
@@ -426,8 +438,8 @@ export default function FacturenPage() {
 
 ***REMOVED***const customer = customers.find((c) => c.name === inv.customer_name);
 
-***REMOVED***const issueDateText = inv.issue_date?.slice(0, 10) || '-';
-***REMOVED***const dueDateText = inv.due_date?.slice(0, 10) || '-';
+***REMOVED***const issueDateText = formatDateNl(inv.issue_date);
+***REMOVED***const dueDateText = formatDateNl(inv.due_date);
 
 ***REMOVED***const issueDate = inv.issue_date ? new Date(inv.issue_date) : null;
 ***REMOVED***const dueDate = inv.due_date ? new Date(inv.due_date) : null;
@@ -440,8 +452,6 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***paymentTermDaysNumeric = diffDays;
 ***REMOVED***  }
 ***REMOVED***}
-
-***REMOVED***const formatCurrency = (value: number) => `€ ${value.toFixed(2).replace('.', ',')}`;
 
 ***REMOVED***const drawLabelValue = (label: string, value: string, y: number) => {
 ***REMOVED***  doc.setFont('helvetica', 'normal');
@@ -575,9 +585,9 @@ export default function FacturenPage() {
 
 ***REMOVED***  doc.text(descriptionLines, colDesc, startY);
 ***REMOVED***  drawRightAligned(String(line.quantity), colQty, startY);
-***REMOVED***  drawRightAligned(formatCurrency(line.amount_excl), colAmount, startY);
+***REMOVED***  drawRightAligned(formatCurrencyNl(line.amount_excl), colAmount, startY);
 ***REMOVED***  drawRightAligned(lineVatRate, colVat, startY);
-***REMOVED***  drawRightAligned(formatCurrency(lineTotal), colTotal, startY);
+***REMOVED***  drawRightAligned(formatCurrencyNl(lineTotal), colTotal, startY);
 
 ***REMOVED***  cursorY = startY + descriptionLines.length * 6;
 ***REMOVED***  doc.setDrawColor(220);
@@ -595,17 +605,17 @@ export default function FacturenPage() {
 
 ***REMOVED***doc.setFont('helvetica', 'bold');
 ***REMOVED***doc.text('Totaal exclusief BTW:', totalsLabelX, cursorY);
-***REMOVED***drawRightAligned(formatCurrency(totalExcl), totalsValueX, cursorY);
+***REMOVED***drawRightAligned(formatCurrencyNl(totalExcl), totalsValueX, cursorY);
 
 ***REMOVED***cursorY += 8;
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***doc.text(`BTW (${(inv.vat_rate ?? 0).toFixed(0)}%):`, totalsLabelX, cursorY);
-***REMOVED***drawRightAligned(formatCurrency(vatAmount), totalsValueX, cursorY);
+***REMOVED***drawRightAligned(formatCurrencyNl(vatAmount), totalsValueX, cursorY);
 
 ***REMOVED***cursorY += 8;
 ***REMOVED***doc.setFont('helvetica', 'bold');
 ***REMOVED***doc.text('Totaal:', totalsLabelX, cursorY);
-***REMOVED***drawRightAligned(formatCurrency(totalIncl), totalsValueX, cursorY);
+***REMOVED***drawRightAligned(formatCurrencyNl(totalIncl), totalsValueX, cursorY);
 
 ***REMOVED***doc.setDrawColor(150);
 ***REMOVED***doc.line(totalsLabelX, cursorY + 2, totalsValueX, cursorY + 2);
@@ -639,10 +649,10 @@ export default function FacturenPage() {
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***doc.text('Factuurbedrag', box3X + boxW / 2, boxY + 7, { align: 'center' });
 ***REMOVED***doc.setFont('helvetica', 'bold');
-***REMOVED***doc.text(formatCurrency(totalIncl), box3X + boxW / 2, boxY + 13, { align: 'center' });
+***REMOVED***doc.text(formatCurrencyNl(totalIncl), box3X + boxW / 2, boxY + 13, { align: 'center' });
 
 ***REMOVED***// Betaaltekst
-***REMOVED***const paymentText = `Het openstaande bedrag van ${formatCurrency(
+***REMOVED***const paymentText = `Het openstaande bedrag van ${formatCurrencyNl(
 ***REMOVED***  totalIncl,
 ***REMOVED***)} dient binnen ${paymentTermDaysNumeric} dagen overgemaakt te zijn op rekeningnummer ${
 ***REMOVED***  companySettings?.iban || '-'
@@ -718,13 +728,13 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-text">{inv.customer_name}</td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{inv.issue_date?.slice(0, 10) || '-'}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatDateNl(inv.issue_date)}
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{inv.due_date?.slice(0, 10) || '-'}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatDateNl(inv.due_date)}
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-right text-xs text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***€ {inv.amount_incl.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(inv.amount_incl)}
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="inline-flex rounded-full bg-surface-offset px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted">
@@ -888,6 +898,11 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
 ***REMOVED******REMOVED******REMOVED******REMOVED***  />
+***REMOVED******REMOVED******REMOVED******REMOVED***  {!form.dueDate && (
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<p className="mt-1 text-[10px] text-muted">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Automatisch op basis van termijn: {formatDateNl(effectiveDueDate)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</p>
+***REMOVED******REMOVED******REMOVED******REMOVED***  )}
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="paymentTermDays">
