@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabaseClient';
 type NavItem = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'invoice' | 'customers' | 'receipts' | 'vat' | 'settings';
+  icon: 'dashboard' | 'invoice' | 'customers' | 'receipts' | 'vat' | 'roadmap' | 'settings';
 };
 
 const navItems: NavItem[] = [
@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { href: '/app/klanten', label: 'Klanten', icon: 'customers' },
   { href: '/app/bonnetjes', label: 'Bonnetjes', icon: 'receipts' },
   { href: '/app/btw', label: 'BTW', icon: 'vat' },
+  { href: '/app/roadmap', label: 'Roadmap', icon: 'roadmap' },
   { href: '/app/instellingen', label: 'Instellingen', icon: 'settings' },
 ];
 
@@ -76,6 +77,15 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED******REMOVED***  <path d="m7.05 7.05 1.56 1.56m6.78 6.78 1.56 1.56" />
 ***REMOVED******REMOVED***  <path d="M12 4v2.2M12 17.8V20" />
 ***REMOVED******REMOVED***  <path d="m7.05 16.95 1.56-1.56m6.78-6.78 1.56-1.56" />
+***REMOVED******REMOVED***</svg>
+***REMOVED***  );
+***REMOVED***case 'roadmap':
+***REMOVED***  return (
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
+***REMOVED******REMOVED***  <path d="M5 5v14" />
+***REMOVED******REMOVED***  <path d="M5 6.5h9l-1.2 2.6L14 12H7.5" />
+***REMOVED******REMOVED***  <circle cx="5" cy="5" r="1.3" fill="currentColor" stroke="none" />
+***REMOVED******REMOVED***  <circle cx="5" cy="19" r="1.3" fill="currentColor" stroke="none" />
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
 ***REMOVED***default:

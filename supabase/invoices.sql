@@ -4,6 +4,7 @@
 create table if not exists public.invoices (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid(),
+  invoice_number text,
   customer_name text not null,
   description text,
   issue_date date not null default current_date,
@@ -17,7 +18,14 @@ create table if not exists public.invoices (
 );
 
 alter table public.invoices
+  add column if not exists invoice_number text;
+
+alter table public.invoices
   add column if not exists currency text not null default 'EUR';
+
+create unique index if not exists invoices_user_invoice_number_uidx
+  on public.invoices(user_id, invoice_number)
+  where invoice_number is not null and invoice_number <> '';
 
 create table if not exists public.invoice_lines (
   id uuid primary key default gen_random_uuid(),

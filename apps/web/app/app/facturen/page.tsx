@@ -30,13 +30,14 @@ interface InvoiceForm {
   customerName: string;
   vatRate: string;
   currency: string;
-  dueDate: string;
+  issueDate: string;
   paymentTermDays: string;
   lines: InvoiceLineForm[];
 }
 
 interface InvoiceRow {
   id: string;
+  invoice_number: string | null;
   customer_name: string;
   issue_date: string;
   due_date: string | null;
@@ -78,6 +79,7 @@ export default function FacturenPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<InvoiceRow | null>(null);
+  const [shareTarget, setShareTarget] = useState<InvoiceRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState<InvoiceForm>({
@@ -85,7 +87,7 @@ export default function FacturenPage() {
 ***REMOVED***customerName: '',
 ***REMOVED***vatRate: '21',
 ***REMOVED***currency: 'EUR',
-***REMOVED***dueDate: '',
+***REMOVED***issueDate: new Date().toISOString().slice(0, 10),
 ***REMOVED***paymentTermDays: '30',
 ***REMOVED***lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
@@ -185,12 +187,81 @@ export default function FacturenPage() {
 ***REMOVED***}
   }
 
+  function invoiceLabel(inv: InvoiceRow): string {
+***REMOVED***return inv.invoice_number || inv.id.slice(0, 8).toUpperCase();
+  }
+
+  function buildCompanySlug(name: string): string {
+***REMOVED***const cleaned = name
+***REMOVED***  .trim()
+***REMOVED***  .replace(/[^a-zA-Z0-9]+/g, '_')
+***REMOVED***  .replace(/^_+|_+$/g, '');
+***REMOVED***if (!cleaned) return 'KLANT';
+***REMOVED***const [first] = cleaned.split('_');
+***REMOVED***return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  }
+
+  async function buildNextInvoiceNumber(customerName: string, issueDate: string): Promise<string> {
+***REMOVED***const prefix = buildCompanySlug(customerName);
+***REMOVED***const year = new Date(issueDate).getFullYear() || new Date().getFullYear();
+***REMOVED***const pattern = `${prefix}_${year}_`;
+***REMOVED***const { data, error: seqError } = await supabase
+***REMOVED***  .from('invoices')
+***REMOVED***  .select('invoice_number')
+***REMOVED***  .ilike('invoice_number', `${pattern}%`);
+
+***REMOVED***if (seqError || !data) {
+***REMOVED***  return `${prefix}_${year}_01`;
+***REMOVED***}
+
+***REMOVED***const used = new Set(
+***REMOVED***  data
+***REMOVED******REMOVED***.map((row) => row.invoice_number)
+***REMOVED******REMOVED***.filter((v): v is string => !!v)
+***REMOVED******REMOVED***.map((v) => Number(v.split('_').pop()))
+***REMOVED******REMOVED***.filter((n) => Number.isFinite(n)),
+***REMOVED***);
+
+***REMOVED***let next = 1;
+***REMOVED***while (used.has(next)) next += 1;
+***REMOVED***return `${prefix}_${year}_${String(next).padStart(2, '0')}`;
+  }
+
+  async function shareInvoice(inv: InvoiceRow, channel: 'email' | 'whatsapp' | 'native') {
+***REMOVED***const label = invoiceLabel(inv);
+***REMOVED***const message = `Factuur ${label} voor ${inv.customer_name} (${formatCurrencyNl(
+***REMOVED***  inv.amount_incl,
+***REMOVED***  inv.currency,
+***REMOVED***)}) met vervaldatum ${formatDateNl(inv.due_date)}.`;
+
+***REMOVED***if (channel === 'email') {
+***REMOVED***  const href = `mailto:?subject=${encodeURIComponent(`Factuur ${label}`)}&body=${encodeURIComponent(
+***REMOVED******REMOVED***message,
+***REMOVED***  )}`;
+***REMOVED***  window.open(href, '_blank');
+***REMOVED***  setShareTarget(null);
+***REMOVED***  return;
+***REMOVED***}
+***REMOVED***if (channel === 'whatsapp') {
+***REMOVED***  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+***REMOVED***  setShareTarget(null);
+***REMOVED***  return;
+***REMOVED***}
+***REMOVED***if (navigator.share) {
+***REMOVED***  await navigator.share({ title: `Factuur ${label}`, text: message });
+***REMOVED***  setShareTarget(null);
+***REMOVED***} else {
+***REMOVED***  setError('Delen wordt op dit apparaat niet ondersteund. Gebruik e-mail of WhatsApp.');
+***REMOVED***}
+  }
+
   const effectiveDueDate = useMemo(() => {
-***REMOVED***if (form.dueDate) return form.dueDate;
-***REMOVED***const d = new Date();
-***REMOVED***d.setDate(d.getDate() + (Number(form.paymentTermDays) || 30));
+***REMOVED***const baseDate = new Date(form.issueDate || new Date().toISOString().slice(0, 10));
+***REMOVED***if (Number.isNaN(baseDate.getTime())) return new Date().toISOString().slice(0, 10);
+***REMOVED***baseDate.setDate(baseDate.getDate() + (Number(form.paymentTermDays) || 30));
+***REMOVED***const d = baseDate;
 ***REMOVED***return d.toISOString().slice(0, 10);
-  }, [form.dueDate, form.paymentTermDays]);
+  }, [form.issueDate, form.paymentTermDays]);
 
   function resetForm() {
 ***REMOVED***setEditingId(null);
@@ -199,7 +270,7 @@ export default function FacturenPage() {
 ***REMOVED***  customerName: '',
 ***REMOVED***  vatRate: '21',
 ***REMOVED***  currency: 'EUR',
-***REMOVED***  dueDate: '',
+***REMOVED***  issueDate: new Date().toISOString().slice(0, 10),
 ***REMOVED***  paymentTermDays: '30',
 ***REMOVED***  lines: [{ description: '', quantity: '1', unitPrice: '' }],
 ***REMOVED***});
@@ -276,10 +347,13 @@ export default function FacturenPage() {
 
 ***REMOVED***try {
 ***REMOVED***  if (!editingId) {
+***REMOVED******REMOVED***const generatedInvoiceNumber = await buildNextInvoiceNumber(form.customerName, form.issueDate);
 ***REMOVED******REMOVED***const { data: inserted, error: invError } = await supabase
 ***REMOVED******REMOVED***  .from('invoices')
 ***REMOVED******REMOVED***  .insert({
+***REMOVED******REMOVED******REMOVED***invoice_number: generatedInvoiceNumber,
 ***REMOVED******REMOVED******REMOVED***customer_name: form.customerName,
+***REMOVED******REMOVED******REMOVED***issue_date: form.issueDate,
 ***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
 ***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
@@ -323,6 +397,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***  .from('invoices')
 ***REMOVED******REMOVED***  .update({
 ***REMOVED******REMOVED******REMOVED***customer_name: form.customerName,
+***REMOVED******REMOVED******REMOVED***issue_date: form.issueDate,
 ***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
 ***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
@@ -421,7 +496,7 @@ export default function FacturenPage() {
 ***REMOVED***  customerName: inv.customer_name,
 ***REMOVED***  vatRate: String(inv.vat_rate),
 ***REMOVED***  currency: inv.currency ?? 'EUR',
-***REMOVED***  dueDate: inv.due_date ?? '',
+***REMOVED***  issueDate: inv.issue_date?.slice(0, 10) || new Date().toISOString().slice(0, 10),
 ***REMOVED***  paymentTermDays,
 ***REMOVED***  lines:
 ***REMOVED******REMOVED***lines.length > 0
@@ -553,7 +628,7 @@ export default function FacturenPage() {
 
 ***REMOVED***cursorY += 14;
 ***REMOVED***doc.setFontSize(11);
-***REMOVED***drawLabelValue('Factuurnummer', inv.id.slice(0, 8).toUpperCase(), cursorY);
+***REMOVED***drawLabelValue('Factuurnummer', invoiceLabel(inv), cursorY);
 ***REMOVED***cursorY += 7;
 ***REMOVED***drawLabelValue('Factuurdatum', issueDateText, cursorY);
 ***REMOVED***cursorY += 7;
@@ -669,7 +744,7 @@ export default function FacturenPage() {
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***doc.text('Factuurnummer', box2X + boxW / 2, boxY + 7, { align: 'center' });
 ***REMOVED***doc.setFont('helvetica', 'bold');
-***REMOVED***doc.text(inv.id.slice(0, 8).toUpperCase(), box2X + boxW / 2, boxY + 13, { align: 'center' });
+***REMOVED***doc.text(invoiceLabel(inv), box2X + boxW / 2, boxY + 13, { align: 'center' });
 
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***doc.text('Factuurbedrag', box3X + boxW / 2, boxY + 7, { align: 'center' });
@@ -681,14 +756,14 @@ export default function FacturenPage() {
 ***REMOVED***  totalIncl,
 ***REMOVED***)} dient binnen ${paymentTermDaysNumeric} dagen overgemaakt te zijn op rekeningnummer ${
 ***REMOVED***  companySettings?.iban || '-'
-***REMOVED***} onder vermelding van het factuurnummer ${inv.id.slice(0, 8).toUpperCase()}.`;
+***REMOVED***} onder vermelding van het factuurnummer ${invoiceLabel(inv)}.`;
 
 ***REMOVED***doc.setFontSize(10);
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***const paymentLines = doc.splitTextToSize(paymentText, 165);
 ***REMOVED***doc.text(paymentLines, 24, pageHeight - 18);
 
-***REMOVED***doc.save(`factuur-${inv.id.slice(0, 8)}.pdf`);
+***REMOVED***doc.save(`factuur-${invoiceLabel(inv)}.pdf`);
   }
 
   return (
@@ -725,7 +800,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***<tr>
 ***REMOVED******REMOVED******REMOVED***  <th className="px-4 py-3">Factuur</th>
 ***REMOVED******REMOVED******REMOVED***  <th className="px-4 py-3">Klant</th>
-***REMOVED******REMOVED******REMOVED***  <th className="px-4 py-3">Datum</th>
+***REMOVED******REMOVED******REMOVED***  <th className="px-4 py-3">Aanmaakdatum</th>
 ***REMOVED******REMOVED******REMOVED***  <th className="px-4 py-3">Vervaldatum</th>
 ***REMOVED******REMOVED******REMOVED***  <th className="px-4 py-3 text-right">Totaal (incl. btw)</th>
 ***REMOVED******REMOVED******REMOVED***  <th className="px-4 py-3">Status</th>
@@ -749,7 +824,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***  invoices.map((inv) => (
 ***REMOVED******REMOVED******REMOVED******REMOVED***<tr key={inv.id} className="border-t border-border/60 align-top">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs font-medium text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{inv.id.slice(0, 8).toUpperCase()}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{invoiceLabel(inv)}
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-text">{inv.customer_name}</td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-muted">
@@ -806,6 +881,26 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<button
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onClick={() => setShareTarget(inv)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="mr-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border text-[10px] text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  aria-label="Factuur delen"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <svg
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***aria-hidden
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***viewBox="0 0 24 24"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="h-3.5 w-3.5 stroke-current"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***fill="none"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***strokeWidth={1.8}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<circle cx="18" cy="5" r="2.3" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<circle cx="6" cy="12" r="2.3" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<circle cx="18" cy="19" r="2.3" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="M8 11 16 6.2" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<path d="m8 13 8 4.8" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </svg>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</button>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<button
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="button"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onClick={() => setDeleteTarget(inv)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-200 text-[10px] text-rose-700 hover:bg-rose-50"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  aria-label="Factuur verwijderen"
@@ -834,7 +929,7 @@ export default function FacturenPage() {
 
 ***REMOVED***  {showForm && (
 ***REMOVED******REMOVED***<div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4 py-6">
-***REMOVED******REMOVED***  <div className="w-full max-w-2xl rounded-[1.8rem] border border-border bg-surface p-6 shadow-soft">
+***REMOVED******REMOVED***  <div className="w-full max-w-6xl rounded-[1.8rem] border border-border bg-surface p-6 shadow-soft">
 ***REMOVED******REMOVED******REMOVED***<div className="mb-4 flex items-center justify-between">
 ***REMOVED******REMOVED******REMOVED***  <div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">
@@ -854,8 +949,9 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***  </button>
 ***REMOVED******REMOVED******REMOVED***</div>
 
-***REMOVED******REMOVED******REMOVED***<form onSubmit={handleSubmit} className="space-y-4 text-sm">
-***REMOVED******REMOVED******REMOVED***  <div className="grid gap-4 md:grid-cols-2">
+***REMOVED******REMOVED******REMOVED***<form onSubmit={handleSubmit} className="grid gap-6 text-sm lg:grid-cols-[1.2fr_.8fr]">
+***REMOVED******REMOVED******REMOVED***  <div className="space-y-4">
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="grid gap-4 md:grid-cols-2">
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="customerId">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Klant
@@ -939,21 +1035,19 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </select>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="dueDate">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Vervaldatum
+***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="issueDate">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Aanmaakdatum
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <input
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***id="dueDate"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***id="issueDate"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="date"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***value={form.dueDate}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***value={form.issueDate}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setForm((f) => ({ ...f, issueDate: e.target.value }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
 ***REMOVED******REMOVED******REMOVED******REMOVED***  />
-***REMOVED******REMOVED******REMOVED******REMOVED***  {!form.dueDate && (
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<p className="mt-1 text-[10px] text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Automatisch op basis van termijn: {formatDateNl(effectiveDueDate)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</p>
-***REMOVED******REMOVED******REMOVED******REMOVED***  )}
+***REMOVED******REMOVED******REMOVED******REMOVED***  <p className="mt-1 text-[10px] text-muted">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Vervaldatum wordt automatisch berekend: {formatDateNl(effectiveDueDate)}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </p>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="paymentTermDays">
@@ -1044,11 +1138,11 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex items-center justify-between md:flex-col md:items-end">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="text-[11px] text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  €{' '}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {currencySymbol(form.currency)}{' '}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {(() => {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const q = Number(line.quantity.replace(',', '.')) || 0;
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const p = Number(line.unitPrice.replace(',', '.')) || 0;
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***return (q * p).toFixed(2);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***return (q * p).toFixed(2).replace('.', ',');
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  })()}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{form.lines.length > 1 && (
@@ -1106,7 +1200,118 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  {saving ? 'Opslaan…' : editingId ? 'Wijzigingen opslaan' : 'Factuur opslaan'}
 ***REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***  </div>
+
+***REMOVED******REMOVED******REMOVED***  <aside className="rounded-2xl border border-border bg-bg p-4">
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="mb-3 flex items-center justify-between">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Live preview
+***REMOVED******REMOVED******REMOVED******REMOVED***  </h3>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="rounded-full bg-surface-offset px-2 py-0.5 text-[10px] text-muted">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{editingId ? 'Bewerken' : 'Nieuw'}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </span>
+***REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="space-y-3 text-xs">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="rounded-2xl border border-border bg-surface p-3">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="font-semibold text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {editingId
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***? (invoices.find((i) => i.id === editingId)?.invoice_number ?? 'FACTUUR')
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***: `${buildCompanySlug(form.customerName || 'Klant')}_${new Date(
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***form.issueDate || new Date().toISOString().slice(0, 10),
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ).getFullYear()}_..`}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-1 text-muted">{form.customerName || 'Klantnaam'}</div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-2 text-muted">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Aanmaakdatum: {formatDateNl(form.issueDate)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <br />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Vervaldatum: {formatDateNl(effectiveDueDate)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="rounded-2xl border border-border bg-surface p-3">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mb-2 font-medium text-text">Regels</div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="space-y-2">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {form.lines.map((line, idx) => {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const q = Number(line.quantity.replace(',', '.')) || 0;
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const p = Number(line.unitPrice.replace(',', '.')) || 0;
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const amount = q * p;
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***return (
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div key={`${line.description}-${idx}`} className="flex items-center justify-between gap-2">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="truncate text-muted">{line.description || '—'}</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono text-text">{formatCurrencyNl(amount, form.currency)}</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  })}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="rounded-2xl border border-border bg-surface p-3">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex items-center justify-between">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-muted">Subtotaal</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(formTotals.totalExcl, form.currency)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-1 flex items-center justify-between">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-muted">BTW ({form.vatRate || '0'}%)</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(formTotals.totalIncl - formTotals.totalExcl, form.currency)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-2 flex items-center justify-between border-t border-border pt-2 font-semibold">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-text">Totaal</span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(formTotals.totalIncl, form.currency)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED***  </aside>
 ***REMOVED******REMOVED******REMOVED***</form>
+***REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED***</div>
+***REMOVED***  )}
+
+***REMOVED***  {shareTarget && (
+***REMOVED******REMOVED***<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6">
+***REMOVED******REMOVED***  <div className="w-full max-w-sm rounded-[1.6rem] border border-border bg-surface p-5 shadow-soft">
+***REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">Factuur delen</h2>
+***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">
+***REMOVED******REMOVED******REMOVED***  Deel <span className="font-mono text-text">{invoiceLabel(shareTarget)}</span> voor{' '}
+***REMOVED******REMOVED******REMOVED***  <span className="font-medium text-text">{shareTarget.customer_name}</span>.
+***REMOVED******REMOVED******REMOVED***</p>
+***REMOVED******REMOVED******REMOVED***<div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => shareInvoice(shareTarget, 'whatsapp')}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-border px-3 py-2 text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***WhatsApp
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => shareInvoice(shareTarget, 'email')}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-border px-3 py-2 text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***E-mail
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => shareInvoice(shareTarget, 'native')}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="col-span-2 rounded-full border border-border px-3 py-2 text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***Deel via apparaat
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED***<div className="mt-3 flex justify-end">
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => setShareTarget(null)}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-border px-4 py-2 text-xs text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***Sluiten
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED***</div>
 ***REMOVED***  )}
@@ -1118,7 +1323,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">
 ***REMOVED******REMOVED******REMOVED***  Weet je zeker dat je factuur{' '}
 ***REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED***{deleteTarget.id.slice(0, 8).toUpperCase()}
+***REMOVED******REMOVED******REMOVED******REMOVED***{invoiceLabel(deleteTarget)}
 ***REMOVED******REMOVED******REMOVED***  </span>{' '}
 ***REMOVED******REMOVED******REMOVED***  voor <span className="font-medium text-text">{deleteTarget.customer_name}</span> wilt
 ***REMOVED******REMOVED******REMOVED***  verwijderen?
