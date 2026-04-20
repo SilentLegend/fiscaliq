@@ -8,10 +8,10 @@ import { supabase } from '../../lib/supabaseClient';
 type NavItem = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'invoice' | 'customers' | 'receipts' | 'vat' | 'roadmap' | 'settings';
+  icon: 'dashboard' | 'invoice' | 'customers' | 'receipts' | 'vat' | 'roadmap' | 'score' | 'settings';
 };
 
-const navItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
   { href: '/app/dashboard', label: 'Dashboard', icon: 'dashboard' },
   { href: '/app/facturen', label: 'Facturen', icon: 'invoice' },
   { href: '/app/klanten', label: 'Klanten', icon: 'customers' },
@@ -88,6 +88,15 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED******REMOVED***  <circle cx="5" cy="19" r="1.3" fill="currentColor" stroke="none" />
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
+***REMOVED***case 'score':
+***REMOVED***  return (
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
+***REMOVED******REMOVED***  <path d="M4 18h16" />
+***REMOVED******REMOVED***  <path d="M7 18v-4" />
+***REMOVED******REMOVED***  <path d="M12 18v-7" />
+***REMOVED******REMOVED***  <path d="M17 18v-10" />
+***REMOVED******REMOVED***</svg>
+***REMOVED***  );
 ***REMOVED***default:
 ***REMOVED***  return null;
   }
@@ -99,6 +108,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [enableClientScore, setEnableClientScore] = useState(false);
+
+  useEffect(() => {
+***REMOVED***const raw = localStorage.getItem('fiscaliq.featureFlags.v1');
+***REMOVED***if (raw) {
+***REMOVED***  try {
+***REMOVED******REMOVED***const parsed = JSON.parse(raw) as { enableClientScore?: boolean };
+***REMOVED******REMOVED***setEnableClientScore(Boolean(parsed.enableClientScore));
+***REMOVED***  } catch {}
+***REMOVED***}
+***REMOVED***const onStorage = () => {
+***REMOVED***  const current = localStorage.getItem('fiscaliq.featureFlags.v1');
+***REMOVED***  if (!current) {
+***REMOVED******REMOVED***setEnableClientScore(false);
+***REMOVED******REMOVED***return;
+***REMOVED***  }
+***REMOVED***  try {
+***REMOVED******REMOVED***const parsed = JSON.parse(current) as { enableClientScore?: boolean };
+***REMOVED******REMOVED***setEnableClientScore(Boolean(parsed.enableClientScore));
+***REMOVED***  } catch {}
+***REMOVED***};
+***REMOVED***window.addEventListener('storage', onStorage);
+***REMOVED***return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const navItems = [
+***REMOVED***...baseNavItems.slice(0, 6),
+***REMOVED***...(enableClientScore ? ([{ href: '/app/klantscore', label: 'Klantscore', icon: 'score' }] as NavItem[]) : []),
+***REMOVED***baseNavItems[6],
+  ];
 
   useEffect(() => {
 ***REMOVED***async function checkAuth() {

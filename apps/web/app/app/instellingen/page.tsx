@@ -31,6 +31,8 @@ export default function InstellingenPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [enableAutoReminders, setEnableAutoReminders] = useState(false);
+  const [enableClientScore, setEnableClientScore] = useState(false);
 
   useEffect(() => {
 ***REMOVED***async function loadSettings() {
@@ -55,6 +57,19 @@ export default function InstellingenPage() {
 ***REMOVED***loadSettings();
   }, []);
 
+  useEffect(() => {
+***REMOVED***const raw = localStorage.getItem('fiscaliq.featureFlags.v1');
+***REMOVED***if (!raw) return;
+***REMOVED***try {
+***REMOVED***  const parsed = JSON.parse(raw) as {
+***REMOVED******REMOVED***enableAutoReminders?: boolean;
+***REMOVED******REMOVED***enableClientScore?: boolean;
+***REMOVED***  };
+***REMOVED***  setEnableAutoReminders(Boolean(parsed.enableAutoReminders));
+***REMOVED***  setEnableClientScore(Boolean(parsed.enableClientScore));
+***REMOVED***} catch {}
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
 ***REMOVED***e.preventDefault();
 ***REMOVED***setSaving(true);
@@ -77,6 +92,11 @@ export default function InstellingenPage() {
 ***REMOVED***}
 
 ***REMOVED***setSaving(false);
+  }
+
+  function persistFlags(next: { enableAutoReminders: boolean; enableClientScore: boolean }) {
+***REMOVED***localStorage.setItem('fiscaliq.featureFlags.v1', JSON.stringify(next));
+***REMOVED***window.dispatchEvent(new StorageEvent('storage', { key: 'fiscaliq.featureFlags.v1' }));
   }
 
   return (
@@ -247,6 +267,41 @@ export default function InstellingenPage() {
 ***REMOVED******REMOVED******REMOVED***<div>
 ***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Support</div>
 ***REMOVED******REMOVED******REMOVED***  <div>Vragen? Stuur gerust een e-mail, link volgt later in de app.</div>
+***REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED***<div className="rounded-2xl border border-border bg-surface p-3">
+***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Experimentele features</div>
+***REMOVED******REMOVED******REMOVED***  <div className="mt-2 space-y-2">
+***REMOVED******REMOVED******REMOVED******REMOVED***<label className="flex items-center justify-between gap-3 text-xs">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <span>Automatische herinneringen</span>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <input
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="checkbox"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***checked={enableAutoReminders}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  const next = {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableAutoReminders: e.target.checked,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableClientScore,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  };
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  setEnableAutoReminders(next.enableAutoReminders);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  persistFlags(next);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}}
+***REMOVED******REMOVED******REMOVED******REMOVED***  />
+***REMOVED******REMOVED******REMOVED******REMOVED***</label>
+***REMOVED******REMOVED******REMOVED******REMOVED***<label className="flex items-center justify-between gap-3 text-xs">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <span>Klantscore-tabblad</span>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <input
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="checkbox"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***checked={enableClientScore}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  const next = {
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableAutoReminders,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableClientScore: e.target.checked,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  };
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  setEnableClientScore(next.enableClientScore);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  persistFlags(next);
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}}
+***REMOVED******REMOVED******REMOVED******REMOVED***  />
+***REMOVED******REMOVED******REMOVED******REMOVED***</label>
+***REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED***</div>

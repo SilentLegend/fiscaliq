@@ -94,6 +94,7 @@ export default function KlantenPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CustomerRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [form, setForm] = useState<Omit<CustomerRecord, 'id'>>(makeEmptyForm());
@@ -101,6 +102,20 @@ export default function KlantenPage() {
   useEffect(() => {
 ***REMOVED***loadCustomers();
   }, []);
+
+  useEffect(() => {
+***REMOVED***if (!deleteTarget) return;
+***REMOVED***const onKeyDown = (e: KeyboardEvent) => {
+***REMOVED***  if (e.key === 'Escape') setDeleteTarget(null);
+***REMOVED***  if (e.key === 'Enter') {
+***REMOVED******REMOVED***e.preventDefault();
+***REMOVED******REMOVED***handleDelete(deleteTarget.id);
+***REMOVED******REMOVED***setDeleteTarget(null);
+***REMOVED***  }
+***REMOVED***};
+***REMOVED***window.addEventListener('keydown', onKeyDown);
+***REMOVED***return () => window.removeEventListener('keydown', onKeyDown);
+  }, [deleteTarget]);
 
   async function loadCustomers() {
 ***REMOVED***setLoading(true);
@@ -351,7 +366,7 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </button>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <button
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="button"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => handleDelete(customer.id)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => setDeleteTarget(customer)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-rose-200 px-3 py-1.5 text-rose-700 hover:bg-rose-50"
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  >
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Verwijderen
@@ -652,6 +667,38 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***</button>
 ***REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED***</form>
+***REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED***</div>
+***REMOVED***  )}
+
+***REMOVED***  {deleteTarget && (
+***REMOVED******REMOVED***<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6">
+***REMOVED******REMOVED***  <div className="w-full max-w-sm rounded-[1.6rem] border border-border bg-surface p-5 shadow-soft">
+***REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">Klant verwijderen</h2>
+***REMOVED******REMOVED******REMOVED***<p className="mt-2 text-xs text-muted">
+***REMOVED******REMOVED******REMOVED***  Weet je zeker dat je <span className="font-medium text-text">{deleteTarget.companyName}</span>{' '}
+***REMOVED******REMOVED******REMOVED***  wilt verwijderen?
+***REMOVED******REMOVED******REMOVED***</p>
+***REMOVED******REMOVED******REMOVED***<p className="mt-1 text-[11px] text-muted">Enter = bevestigen, Esc = annuleren.</p>
+***REMOVED******REMOVED******REMOVED***<div className="mt-4 flex items-center justify-end gap-2 text-xs">
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => setDeleteTarget(null)}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-border px-4 py-2 text-text hover:bg-surface-offset"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***Annuleren
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***  <button
+***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
+***REMOVED******REMOVED******REMOVED******REMOVED***onClick={() => {
+***REMOVED******REMOVED******REMOVED******REMOVED***  handleDelete(deleteTarget.id);
+***REMOVED******REMOVED******REMOVED******REMOVED***  setDeleteTarget(null);
+***REMOVED******REMOVED******REMOVED******REMOVED***}}
+***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full border border-rose-300 bg-rose-50 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-100"
+***REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED***Ja, verwijderen
+***REMOVED******REMOVED******REMOVED***  </button>
+***REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED***</div>
 ***REMOVED***  )}

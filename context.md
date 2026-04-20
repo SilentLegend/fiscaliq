@@ -223,3 +223,49 @@ interface InvoiceForm {
 3. **Dubbel-check de code** vóór je uploadt: TypeScript types kloppen, imports aanwezig, interfaces compleet
 4. **Upload via GitHub MCP** als die tool beschikbaar is — anders geef exacte code + stap-voor-stap GitHub web-editor instructies
 5. **Nooit halve antwoorden geven** — altijd de complete fix in één keer
+
+***
+
+## Update 2026-04-20 (huidige stand)
+
+### Facturen
+- Facturenpagina gebruikt nu **aanmaakdatum (`issue_date`)** + **automatische vervaldatum** via betalingstermijn (14/30/60/90 dagen).
+- Factuurnummering ondersteunt nu format:
+  - `NAAMBEDRIJF_HUIDIGEJAAR_FACTUURNUMMER`
+  - voorbeeld: `Dhl_2026_01`
+- Database `invoices` heeft extra kolommen:
+  - `currency` (default `EUR`)
+  - `invoice_number` (met unieke index per `user_id`)
+- In de factuurmodal is een **PDF-preview in browser** toegevoegd via een echte jsPDF-render, gelijk aan download-layout.
+- Actieknoppen per factuur:
+  - bewerken
+  - downloaden
+  - delen (WhatsApp, e-mail, native share)
+  - verwijderen
+- Factuuroverzicht heeft kwartaalfilters (`Q1` t/m `Q4`) + jaarselectie, met meest recente bovenaan binnen de selectie.
+- Delete-confirm in facturen ondersteunt toetsen:
+  - `Enter` = bevestigen
+  - `Esc` = annuleren
+
+### Klanten
+- Klantenpagina is volledig CRUD gekoppeld aan Supabase (geen localStorage meer).
+- `customers` tabel uitgebreid met volledige facturatievelden:
+  - o.a. `customer_number`, `legal_form`, `contact_name`, `payment_term_days`, `currency`, `delivery_method`, `status`, `notes`, `updated_at`.
+- Delete-confirm in klanten ondersteunt toetsen:
+  - `Enter` = bevestigen
+  - `Esc` = annuleren
+
+### Navigatie & extra pagina's
+- Nieuwe app-pagina: `/app/roadmap` met projectfases.
+- Optionele app-pagina: `/app/klantscore` (via feature toggle).
+
+### Instellingen / feature toggles
+- In `Instellingen` staan experimentele toggles:
+  - automatische herinneringen
+  - klantscore-tabblad
+- Flags worden lokaal opgeslagen onder `fiscaliq.featureFlags.v1`.
+
+### Productrichting
+- Doelgroep blijft: **ZZP'ers en kleine ondernemers**.
+- Toekomstige kernfeature: **bankkoppeling** voor automatische betaalstatus per factuur.
+- Publieke factuurpagina is **niet gewenst**; verzending loopt via bestaande kanalen (mail/WhatsApp) en betaling via reguliere bankoverschrijving.

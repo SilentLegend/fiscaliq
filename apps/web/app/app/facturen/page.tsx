@@ -57,6 +57,8 @@ interface InvoiceLineRow {
   amount_excl: number;
 }
 
+type QuarterFilter = 'all' | 'Q1' | 'Q2' | 'Q3' | 'Q4';
+
 interface CompanySettings {
   company_name: string;
   street: string | null;
@@ -81,6 +83,8 @@ export default function FacturenPage() {
   const [deleteTarget, setDeleteTarget] = useState<InvoiceRow | null>(null);
   const [shareTarget, setShareTarget] = useState<InvoiceRow | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedQuarter, setSelectedQuarter] = useState<QuarterFilter>('all');
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   const [form, setForm] = useState<InvoiceForm>({
 ***REMOVED***customerId: '',
@@ -152,6 +156,19 @@ export default function FacturenPage() {
 ***REMOVED***loadData();
   }, []);
 
+  useEffect(() => {
+***REMOVED***if (!deleteTarget) return;
+***REMOVED***const onKeyDown = (e: KeyboardEvent) => {
+***REMOVED***  if (e.key === 'Escape') setDeleteTarget(null);
+***REMOVED***  if (e.key === 'Enter') {
+***REMOVED******REMOVED***e.preventDefault();
+***REMOVED******REMOVED***handleDeleteConfirm();
+***REMOVED***  }
+***REMOVED***};
+***REMOVED***window.addEventListener('keydown', onKeyDown);
+***REMOVED***return () => window.removeEventListener('keydown', onKeyDown);
+  }, [deleteTarget]);
+
   const formTotals = useMemo(() => {
 ***REMOVED***let totalExcl = 0;
 ***REMOVED***form.lines.forEach((line) => {
@@ -163,6 +180,33 @@ export default function FacturenPage() {
 ***REMOVED***const totalIncl = totalExcl * (1 + vat / 100);
 ***REMOVED***return { totalExcl, totalIncl, vat };
   }, [form.lines, form.vatRate]);
+
+  const quarterFilteredInvoices = useMemo(() => {
+***REMOVED***const sorted = [...invoices].sort(
+***REMOVED***  (a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime(),
+***REMOVED***);
+***REMOVED***return sorted.filter((inv) => {
+***REMOVED***  const d = new Date(inv.issue_date);
+***REMOVED***  if (Number.isNaN(d.getTime())) return false;
+***REMOVED***  if (d.getFullYear() !== selectedYear) return false;
+***REMOVED***  if (selectedQuarter === 'all') return true;
+***REMOVED***  const month = d.getMonth() + 1;
+***REMOVED***  if (selectedQuarter === 'Q1') return month >= 1 && month <= 3;
+***REMOVED***  if (selectedQuarter === 'Q2') return month >= 4 && month <= 6;
+***REMOVED***  if (selectedQuarter === 'Q3') return month >= 7 && month <= 9;
+***REMOVED***  return month >= 10 && month <= 12;
+***REMOVED***});
+  }, [invoices, selectedQuarter, selectedYear]);
+
+  const invoiceYears = useMemo(() => {
+***REMOVED***const years = new Set<number>();
+***REMOVED***invoices.forEach((inv) => {
+***REMOVED***  const y = new Date(inv.issue_date).getFullYear();
+***REMOVED***  if (Number.isFinite(y)) years.add(y);
+***REMOVED***});
+***REMOVED***if (!years.size) years.add(new Date().getFullYear());
+***REMOVED***return [...years].sort((a, b) => b - a);
+  }, [invoices]);
 
   function formatDateNl(value: string | null | undefined): string {
 ***REMOVED***if (!value) return '-';
@@ -229,21 +273,28 @@ export default function FacturenPage() {
 
   async function shareInvoice(inv: InvoiceRow, channel: 'email' | 'whatsapp' | 'native') {
 ***REMOVED***const label = invoiceLabel(inv);
+***REMOVED***const customer = customers.find((c) => c.name === inv.customer_name);
 ***REMOVED***const message = `Factuur ${label} voor ${inv.customer_name} (${formatCurrencyNl(
 ***REMOVED***  inv.amount_incl,
 ***REMOVED***  inv.currency,
 ***REMOVED***)}) met vervaldatum ${formatDateNl(inv.due_date)}.`;
 
 ***REMOVED***if (channel === 'email') {
-***REMOVED***  const href = `mailto:?subject=${encodeURIComponent(`Factuur ${label}`)}&body=${encodeURIComponent(
-***REMOVED******REMOVED***message,
-***REMOVED***  )}`;
+***REMOVED***  const to = customer?.email ? `${encodeURIComponent(customer.email)}` : '';
+***REMOVED***  const href = `mailto:${to}?subject=${encodeURIComponent(
+***REMOVED******REMOVED***`Factuur ${label}`,
+***REMOVED***  )}&body=${encodeURIComponent(message)}`;
 ***REMOVED***  window.open(href, '_blank');
 ***REMOVED***  setShareTarget(null);
 ***REMOVED***  return;
 ***REMOVED***}
 ***REMOVED***if (channel === 'whatsapp') {
-***REMOVED***  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+***REMOVED***  const cleaned = (customer?.phone || '').replace(/[^\d+]/g, '');
+***REMOVED***  const phone = cleaned ? cleaned.replace(/^0/, '31') : '';
+***REMOVED***  const url = phone
+***REMOVED******REMOVED***? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+***REMOVED******REMOVED***: `https://wa.me/?text=${encodeURIComponent(message)}`;
+***REMOVED***  window.open(url, '_blank');
 ***REMOVED***  setShareTarget(null);
 ***REMOVED***  return;
 ***REMOVED***}
@@ -365,7 +416,11 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***  .single();
 
 ***REMOVED******REMOVED***if (invError || !inserted) {
-***REMOVED******REMOVED***  setError('Kon factuur niet opslaan.');
+***REMOVED******REMOVED***  setError(
+***REMOVED******REMOVED******REMOVED***invError?.message?.includes('invoices_user_invoice_number_uidx')
+***REMOVED******REMOVED******REMOVED***  ? 'Factuurnummer bestaat al, probeer opnieuw.'
+***REMOVED******REMOVED******REMOVED***  : 'Kon factuur niet opslaan.',
+***REMOVED******REMOVED***  );
 ***REMOVED******REMOVED***  setSaving(false);
 ***REMOVED******REMOVED***  return;
 ***REMOVED******REMOVED***}
@@ -523,8 +578,7 @@ export default function FacturenPage() {
 ***REMOVED***});
   }
 
-  function handleDownloadPdf(inv: InvoiceRow) {
-***REMOVED***const lines = linesByInvoice[inv.id] ?? [];
+  function generateInvoicePdf(inv: InvoiceRow, lines: InvoiceLineRow[]) {
 ***REMOVED***const doc = new jsPDF();
 ***REMOVED***const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -763,8 +817,58 @@ export default function FacturenPage() {
 ***REMOVED***const paymentLines = doc.splitTextToSize(paymentText, 165);
 ***REMOVED***doc.text(paymentLines, 24, pageHeight - 18);
 
+***REMOVED***return doc;
+  }
+
+  function handleDownloadPdf(inv: InvoiceRow) {
+***REMOVED***const lines = linesByInvoice[inv.id] ?? [];
+***REMOVED***const doc = generateInvoicePdf(inv, lines);
 ***REMOVED***doc.save(`factuur-${invoiceLabel(inv)}.pdf`);
   }
+
+  const previewPdfDataUri = useMemo(() => {
+***REMOVED***const previewLines: InvoiceLineRow[] = form.lines.map((line, idx) => {
+***REMOVED***  const quantity = Number(line.quantity.replace(',', '.')) || 0;
+***REMOVED***  const unitPrice = Number(line.unitPrice.replace(',', '.')) || 0;
+***REMOVED***  return {
+***REMOVED******REMOVED***id: `preview-${idx}`,
+***REMOVED******REMOVED***invoice_id: 'preview',
+***REMOVED******REMOVED***description: line.description || '-',
+***REMOVED******REMOVED***quantity,
+***REMOVED******REMOVED***unit_price: unitPrice,
+***REMOVED******REMOVED***amount_excl: quantity * unitPrice,
+***REMOVED***  };
+***REMOVED***});
+***REMOVED***const previewInvoice: InvoiceRow = {
+***REMOVED***  id: editingId || 'preview',
+***REMOVED***  invoice_number: editingId
+***REMOVED******REMOVED***? invoices.find((inv) => inv.id === editingId)?.invoice_number ?? null
+***REMOVED******REMOVED***: `${buildCompanySlug(form.customerName || 'Klant')}_${new Date(
+***REMOVED******REMOVED******REMOVED***form.issueDate || new Date().toISOString().slice(0, 10),
+***REMOVED******REMOVED***  ).getFullYear()}_..`,
+***REMOVED***  customer_name: form.customerName || 'Klantnaam',
+***REMOVED***  issue_date: form.issueDate || new Date().toISOString().slice(0, 10),
+***REMOVED***  due_date: effectiveDueDate,
+***REMOVED***  amount_excl: formTotals.totalExcl,
+***REMOVED***  vat_rate: Number(form.vatRate) || 0,
+***REMOVED***  amount_incl: formTotals.totalIncl,
+***REMOVED***  currency: form.currency,
+***REMOVED***  status: 'concept',
+***REMOVED***};
+***REMOVED***const doc = generateInvoicePdf(previewInvoice, previewLines);
+***REMOVED***return doc.output('datauristring');
+  }, [
+***REMOVED***editingId,
+***REMOVED***invoices,
+***REMOVED***form.customerName,
+***REMOVED***form.issueDate,
+***REMOVED***form.vatRate,
+***REMOVED***form.currency,
+***REMOVED***form.lines,
+***REMOVED***effectiveDueDate,
+***REMOVED***formTotals.totalExcl,
+***REMOVED***formTotals.totalIncl,
+  ]);
 
   return (
 ***REMOVED***<div className="space-y-6">
@@ -794,6 +898,36 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED***</div>
 ***REMOVED***  )}
 
+***REMOVED***  <div className="flex flex-wrap items-center justify-between gap-3">
+***REMOVED******REMOVED***<div className="flex flex-wrap gap-2">
+***REMOVED******REMOVED***  {(['all', 'Q1', 'Q2', 'Q3', 'Q4'] as QuarterFilter[]).map((q) => (
+***REMOVED******REMOVED******REMOVED***<button
+***REMOVED******REMOVED******REMOVED***  key={q}
+***REMOVED******REMOVED******REMOVED***  type="button"
+***REMOVED******REMOVED******REMOVED***  onClick={() => setSelectedQuarter(q)}
+***REMOVED******REMOVED******REMOVED***  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+***REMOVED******REMOVED******REMOVED******REMOVED***selectedQuarter === q
+***REMOVED******REMOVED******REMOVED******REMOVED***  ? 'bg-primary text-white'
+***REMOVED******REMOVED******REMOVED******REMOVED***  : 'border border-border bg-surface text-text hover:bg-surface-offset'
+***REMOVED******REMOVED******REMOVED***  }`}
+***REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED***  {q === 'all' ? 'Alle kwartalen' : q}
+***REMOVED******REMOVED******REMOVED***</button>
+***REMOVED******REMOVED***  ))}
+***REMOVED******REMOVED***</div>
+***REMOVED******REMOVED***<select
+***REMOVED******REMOVED***  value={selectedYear}
+***REMOVED******REMOVED***  onChange={(e) => setSelectedYear(Number(e.target.value))}
+***REMOVED******REMOVED***  className="h-9 rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+***REMOVED******REMOVED***>
+***REMOVED******REMOVED***  {invoiceYears.map((y) => (
+***REMOVED******REMOVED******REMOVED***<option key={y} value={y}>
+***REMOVED******REMOVED******REMOVED***  {y}
+***REMOVED******REMOVED******REMOVED***</option>
+***REMOVED******REMOVED***  ))}
+***REMOVED******REMOVED***</select>
+***REMOVED***  </div>
+
 ***REMOVED***  <div className="overflow-hidden rounded-2xl border border-border bg-surface">
 ***REMOVED******REMOVED***<table className="min-w-full text-left text-sm">
 ***REMOVED******REMOVED***  <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
@@ -814,14 +948,14 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  Facturen laden…
 ***REMOVED******REMOVED******REMOVED******REMOVED***</td>
 ***REMOVED******REMOVED******REMOVED***  </tr>
-***REMOVED******REMOVED******REMOVED***) : invoices.length === 0 ? (
+***REMOVED******REMOVED******REMOVED***) : quarterFilteredInvoices.length === 0 ? (
 ***REMOVED******REMOVED******REMOVED***  <tr>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<td className="px-4 py-6 text-center text-xs text-muted" colSpan={7}>
-***REMOVED******REMOVED******REMOVED******REMOVED***  Nog geen facturen. Maak je eerste factuur aan om te beginnen.
+***REMOVED******REMOVED******REMOVED******REMOVED***  Geen facturen in deze kwartaalweergave.
 ***REMOVED******REMOVED******REMOVED******REMOVED***</td>
 ***REMOVED******REMOVED******REMOVED***  </tr>
 ***REMOVED******REMOVED******REMOVED***) : (
-***REMOVED******REMOVED******REMOVED***  invoices.map((inv) => (
+***REMOVED******REMOVED******REMOVED***  quarterFilteredInvoices.map((inv) => (
 ***REMOVED******REMOVED******REMOVED******REMOVED***<tr key={inv.id} className="border-t border-border/60 align-top">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs font-medium text-text">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{invoiceLabel(inv)}
@@ -1211,60 +1345,12 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{editingId ? 'Bewerken' : 'Nieuw'}
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="space-y-3 text-xs">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="rounded-2xl border border-border bg-surface p-3">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="font-semibold text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {editingId
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***? (invoices.find((i) => i.id === editingId)?.invoice_number ?? 'FACTUUR')
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***: `${buildCompanySlug(form.customerName || 'Klant')}_${new Date(
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***form.issueDate || new Date().toISOString().slice(0, 10),
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  ).getFullYear()}_..`}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-1 text-muted">{form.customerName || 'Klantnaam'}</div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-2 text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Aanmaakdatum: {formatDateNl(form.issueDate)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <br />
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  Vervaldatum: {formatDateNl(effectiveDueDate)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
-
-***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="rounded-2xl border border-border bg-surface p-3">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mb-2 font-medium text-text">Regels</div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="space-y-2">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {form.lines.map((line, idx) => {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const q = Number(line.quantity.replace(',', '.')) || 0;
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const p = Number(line.unitPrice.replace(',', '.')) || 0;
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const amount = q * p;
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***return (
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <div key={`${line.description}-${idx}`} className="flex items-center justify-between gap-2">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="truncate text-muted">{line.description || '—'}</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono text-text">{formatCurrencyNl(amount, form.currency)}</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***);
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  })}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
-
-***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="rounded-2xl border border-border bg-surface p-3">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex items-center justify-between">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-muted">Subtotaal</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(formTotals.totalExcl, form.currency)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-1 flex items-center justify-between">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-muted">BTW ({form.vatRate || '0'}%)</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(formTotals.totalIncl - formTotals.totalExcl, form.currency)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<div className="mt-2 flex items-center justify-between border-t border-border pt-2 font-semibold">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-text">Totaal</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="font-mono text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(formTotals.totalIncl, form.currency)}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="overflow-hidden rounded-2xl border border-border bg-surface">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <iframe
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***title="Factuur PDF preview"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***src={previewPdfDataUri}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="h-[640px] w-full bg-white"
+***REMOVED******REMOVED******REMOVED******REMOVED***  />
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED***  </aside>
 ***REMOVED******REMOVED******REMOVED***</form>
@@ -1328,6 +1414,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***  voor <span className="font-medium text-text">{deleteTarget.customer_name}</span> wilt
 ***REMOVED******REMOVED******REMOVED***  verwijderen?
 ***REMOVED******REMOVED******REMOVED***</p>
+***REMOVED******REMOVED******REMOVED***<p className="mt-1 text-[11px] text-muted">Enter = bevestigen, Esc = annuleren.</p>
 ***REMOVED******REMOVED******REMOVED***<div className="mt-4 flex items-center justify-end gap-2 text-xs">
 ***REMOVED******REMOVED******REMOVED***  <button
 ***REMOVED******REMOVED******REMOVED******REMOVED***type="button"
