@@ -14,6 +14,9 @@ interface Customer {
   kvk: string | null;
   email: string | null;
   phone: string | null;
+  payment_term_days: number | null;
+  vat_rate_preference: string | null;
+  currency: string | null;
 }
 
 interface InvoiceLineForm {
@@ -26,6 +29,7 @@ interface InvoiceForm {
   customerId: string;
   customerName: string;
   vatRate: string;
+  currency: string;
   dueDate: string;
   paymentTermDays: string;
   lines: InvoiceLineForm[];
@@ -39,6 +43,7 @@ interface InvoiceRow {
   amount_excl: number;
   vat_rate: number;
   amount_incl: number;
+  currency: string | null;
   status: string;
 }
 
@@ -79,6 +84,7 @@ export default function FacturenPage() {
 ***REMOVED***customerId: '',
 ***REMOVED***customerName: '',
 ***REMOVED***vatRate: '21',
+***REMOVED***currency: 'EUR',
 ***REMOVED***dueDate: '',
 ***REMOVED***paymentTermDays: '30',
 ***REMOVED***lines: [{ description: '', quantity: '1', unitPrice: '' }],
@@ -163,8 +169,20 @@ export default function FacturenPage() {
 ***REMOVED***return d.toLocaleDateString('nl-NL');
   }
 
-  function formatCurrencyNl(value: number): string {
-***REMOVED***return `€ ${value.toFixed(2).replace('.', ',')}`;
+  function formatCurrencyNl(value: number, code?: string | null): string {
+***REMOVED***return `${currencySymbol(code)} ${value.toFixed(2).replace('.', ',')}`;
+  }
+
+  function currencySymbol(code: string | null | undefined): string {
+***REMOVED***switch (code) {
+***REMOVED***  case 'USD':
+***REMOVED******REMOVED***return '$';
+***REMOVED***  case 'GBP':
+***REMOVED******REMOVED***return '£';
+***REMOVED***  case 'EUR':
+***REMOVED***  default:
+***REMOVED******REMOVED***return '€';
+***REMOVED***}
   }
 
   const effectiveDueDate = useMemo(() => {
@@ -180,6 +198,7 @@ export default function FacturenPage() {
 ***REMOVED***  customerId: '',
 ***REMOVED***  customerName: '',
 ***REMOVED***  vatRate: '21',
+***REMOVED***  currency: 'EUR',
 ***REMOVED***  dueDate: '',
 ***REMOVED***  paymentTermDays: '30',
 ***REMOVED***  lines: [{ description: '', quantity: '1', unitPrice: '' }],
@@ -264,6 +283,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
 ***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
+***REMOVED******REMOVED******REMOVED***currency: form.currency,
 ***REMOVED******REMOVED******REMOVED***due_date: computedDueDate || null,
 ***REMOVED******REMOVED******REMOVED***status: 'concept',
 ***REMOVED******REMOVED***  })
@@ -306,6 +326,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED***amount_excl: totalExclLocal,
 ***REMOVED******REMOVED******REMOVED***vat_rate: vat,
 ***REMOVED******REMOVED******REMOVED***amount_incl: totalInclLocal,
+***REMOVED******REMOVED******REMOVED***currency: form.currency,
 ***REMOVED******REMOVED******REMOVED***due_date: computedDueDate || null,
 ***REMOVED******REMOVED***  })
 ***REMOVED******REMOVED***  .eq('id', editingId);
@@ -388,7 +409,7 @@ export default function FacturenPage() {
 ***REMOVED***  if (!Number.isNaN(issue.getTime()) && !Number.isNaN(due.getTime())) {
 ***REMOVED******REMOVED***const diffMs = due.getTime() - issue.getTime();
 ***REMOVED******REMOVED***const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-***REMOVED******REMOVED***if (diffDays === 30 || diffDays === 60 || diffDays === 90) {
+***REMOVED******REMOVED***if (diffDays === 14 || diffDays === 30 || diffDays === 60 || diffDays === 90) {
 ***REMOVED******REMOVED***  paymentTermDays = String(diffDays);
 ***REMOVED******REMOVED***}
 ***REMOVED***  }
@@ -399,6 +420,7 @@ export default function FacturenPage() {
 ***REMOVED***  customerId: '',
 ***REMOVED***  customerName: inv.customer_name,
 ***REMOVED***  vatRate: String(inv.vat_rate),
+***REMOVED***  currency: inv.currency ?? 'EUR',
 ***REMOVED***  dueDate: inv.due_date ?? '',
 ***REMOVED***  paymentTermDays,
 ***REMOVED***  lines:
@@ -448,10 +470,13 @@ export default function FacturenPage() {
 ***REMOVED***if (issueDate && dueDate && !Number.isNaN(issueDate.getTime()) && !Number.isNaN(dueDate.getTime())) {
 ***REMOVED***  const diffMs = dueDate.getTime() - issueDate.getTime();
 ***REMOVED***  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-***REMOVED***  if (diffDays === 30 || diffDays === 60 || diffDays === 90) {
+***REMOVED***  if (diffDays === 14 || diffDays === 30 || diffDays === 60 || diffDays === 90) {
 ***REMOVED******REMOVED***paymentTermDaysNumeric = diffDays;
 ***REMOVED***  }
 ***REMOVED***}
+
+***REMOVED***const formatCurrency = (value: number) =>
+***REMOVED***  `${currencySymbol(inv.currency)} ${value.toFixed(2).replace('.', ',')}`;
 
 ***REMOVED***const drawLabelValue = (label: string, value: string, y: number) => {
 ***REMOVED***  doc.setFont('helvetica', 'normal');
@@ -585,9 +610,9 @@ export default function FacturenPage() {
 
 ***REMOVED***  doc.text(descriptionLines, colDesc, startY);
 ***REMOVED***  drawRightAligned(String(line.quantity), colQty, startY);
-***REMOVED***  drawRightAligned(formatCurrencyNl(line.amount_excl), colAmount, startY);
+***REMOVED***  drawRightAligned(formatCurrency(line.amount_excl), colAmount, startY);
 ***REMOVED***  drawRightAligned(lineVatRate, colVat, startY);
-***REMOVED***  drawRightAligned(formatCurrencyNl(lineTotal), colTotal, startY);
+***REMOVED***  drawRightAligned(formatCurrency(lineTotal), colTotal, startY);
 
 ***REMOVED***  cursorY = startY + descriptionLines.length * 6;
 ***REMOVED***  doc.setDrawColor(220);
@@ -605,17 +630,17 @@ export default function FacturenPage() {
 
 ***REMOVED***doc.setFont('helvetica', 'bold');
 ***REMOVED***doc.text('Totaal exclusief BTW:', totalsLabelX, cursorY);
-***REMOVED***drawRightAligned(formatCurrencyNl(totalExcl), totalsValueX, cursorY);
+***REMOVED***drawRightAligned(formatCurrency(totalExcl), totalsValueX, cursorY);
 
 ***REMOVED***cursorY += 8;
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***doc.text(`BTW (${(inv.vat_rate ?? 0).toFixed(0)}%):`, totalsLabelX, cursorY);
-***REMOVED***drawRightAligned(formatCurrencyNl(vatAmount), totalsValueX, cursorY);
+***REMOVED***drawRightAligned(formatCurrency(vatAmount), totalsValueX, cursorY);
 
 ***REMOVED***cursorY += 8;
 ***REMOVED***doc.setFont('helvetica', 'bold');
 ***REMOVED***doc.text('Totaal:', totalsLabelX, cursorY);
-***REMOVED***drawRightAligned(formatCurrencyNl(totalIncl), totalsValueX, cursorY);
+***REMOVED***drawRightAligned(formatCurrency(totalIncl), totalsValueX, cursorY);
 
 ***REMOVED***doc.setDrawColor(150);
 ***REMOVED***doc.line(totalsLabelX, cursorY + 2, totalsValueX, cursorY + 2);
@@ -649,10 +674,10 @@ export default function FacturenPage() {
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***doc.text('Factuurbedrag', box3X + boxW / 2, boxY + 7, { align: 'center' });
 ***REMOVED***doc.setFont('helvetica', 'bold');
-***REMOVED***doc.text(formatCurrencyNl(totalIncl), box3X + boxW / 2, boxY + 13, { align: 'center' });
+***REMOVED***doc.text(formatCurrency(totalIncl), box3X + boxW / 2, boxY + 13, { align: 'center' });
 
 ***REMOVED***// Betaaltekst
-***REMOVED***const paymentText = `Het openstaande bedrag van ${formatCurrencyNl(
+***REMOVED***const paymentText = `Het openstaande bedrag van ${formatCurrency(
 ***REMOVED***  totalIncl,
 ***REMOVED***)} dient binnen ${paymentTermDaysNumeric} dagen overgemaakt te zijn op rekeningnummer ${
 ***REMOVED***  companySettings?.iban || '-'
@@ -734,7 +759,9 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatDateNl(inv.due_date)}
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-right text-xs text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{formatCurrencyNl(inv.amount_incl)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{`${currencySymbol(inv.currency)} ${inv.amount_incl
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  .toFixed(2)
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  .replace('.', ',')}`}
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="inline-flex rounded-full bg-surface-offset px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted">
@@ -843,6 +870,15 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***...f,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***customerId: id,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***customerName: found ? found.name : '',
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***vatRate:
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  found?.vat_rate_preference && !Number.isNaN(Number(found.vat_rate_preference))
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***? found.vat_rate_preference
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***: f.vatRate,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***paymentTermDays:
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  found?.payment_term_days && [14, 30, 60, 90].includes(found.payment_term_days)
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***? String(found.payment_term_days)
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***: f.paymentTermDays,
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***currency: found?.currency || f.currency,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  }));
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
@@ -888,6 +924,21 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  />
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<div>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="currency">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Factuurvaluta
+***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <select
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***id="currency"
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***value={form.currency}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+***REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="EUR">EUR (€)</option>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="USD">USD ($)</option>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="GBP">GBP (£)</option>
+***REMOVED******REMOVED******REMOVED******REMOVED***  </select>
+***REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***<div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="text-xs font-medium text-text" htmlFor="dueDate">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Vervaldatum
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
@@ -914,6 +965,7 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setForm((f) => ({ ...f, paymentTermDays: e.target.value }))}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
 ***REMOVED******REMOVED******REMOVED******REMOVED***  >
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="14">14 dagen</option>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="30">30 dagen</option>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="60">60 dagen</option>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<option value="90">90 dagen</option>
@@ -1023,13 +1075,13 @@ export default function FacturenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Subtotaal:</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalExcl.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {formatCurrencyNl(formTotals.totalExcl, form.currency)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <div className="flex min-w-[260px] items-center justify-between whitespace-nowrap">
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Totaal incl. btw:</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-mono font-medium text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  € {formTotals.totalIncl.toFixed(2)}
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {formatCurrencyNl(formTotals.totalIncl, form.currency)}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***</div>

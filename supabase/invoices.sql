@@ -11,9 +11,13 @@ create table if not exists public.invoices (
   amount_excl numeric(12,2) not null,
   vat_rate numeric(5,2) not null,
   amount_incl numeric(12,2) not null,
+  currency text not null default 'EUR',
   status text not null default 'concept',
   created_at timestamptz not null default now()
 );
+
+alter table public.invoices
+  add column if not exists currency text not null default 'EUR';
 
 create table if not exists public.invoice_lines (
   id uuid primary key default gen_random_uuid(),
