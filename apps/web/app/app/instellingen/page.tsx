@@ -121,15 +121,16 @@ export default function InstellingenPage() {
 
 ***REMOVED***  const now = new Date();
 ***REMOVED***  const overdueInvoices = (invoices as any[] || []).filter((inv) => {
+***REMOVED******REMOVED***if (!inv.due_date) return false;
 ***REMOVED******REMOVED***const dueDate = new Date(inv.due_date);
 ***REMOVED******REMOVED***return dueDate < now;
 ***REMOVED***  });
 
 ***REMOVED***  if (overdueInvoices.length === 0) {
-***REMOVED******REMOVED***setMessage('✓ Herinnering test geslaagd! Er zijn geen vervallen facturen om te herinneren.');
+***REMOVED******REMOVED***setMessage('Test geslaagd! Er zijn geen vervallen facturen om te herinneren.');
 ***REMOVED***  } else {
 ***REMOVED******REMOVED***const count = overdueInvoices.length;
-***REMOVED******REMOVED***setMessage(`✓ Herinnering test geslaagd! Zou ${count} klant(en) herinneren voor vervallen factuur${count !== 1 ? 'en' : ''}.`);
+***REMOVED******REMOVED***setMessage(`Test geslaagd! Zou ${count} klant(en) herinneren voor vervallen factuur${count !== 1 ? 'en' : ''}.`);
 ***REMOVED***  }
 ***REMOVED***} catch (err) {
 ***REMOVED***  console.error('Reminder test error:', err);

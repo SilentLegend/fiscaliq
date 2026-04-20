@@ -291,17 +291,9 @@ export default function FacturenPage() {
 ***REMOVED***if (channel === 'whatsapp') {
 ***REMOVED***  const cleaned = (customer?.phone || '').replace(/[^\d+]/g, '');
 ***REMOVED***  const phone = cleaned ? cleaned.replace(/^0/, '31') : '';
-***REMOVED***  
-***REMOVED***  // Generate PDF and create download link
-***REMOVED***  const lines = linesByInvoice[inv.id] ?? [];
-***REMOVED***  const doc = generateInvoicePdf(inv, lines);
-***REMOVED***  const pdfBlob = doc.output('blob') as Blob;
-***REMOVED***  const pdfUrl = URL.createObjectURL(pdfBlob);
-***REMOVED***  
-***REMOVED***  const fullMessage = `${message}\n\nDownload factuur: ${pdfUrl}`;
 ***REMOVED***  const url = phone
-***REMOVED******REMOVED***? `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`
-***REMOVED******REMOVED***: `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
+***REMOVED******REMOVED***? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+***REMOVED******REMOVED***: `https://wa.me/?text=${encodeURIComponent(message)}`;
 ***REMOVED***  window.open(url, '_blank');
 ***REMOVED***  setShareTarget(null);
 ***REMOVED***  return;
@@ -835,36 +827,41 @@ export default function FacturenPage() {
   }
 
   const previewPdfDataUri = useMemo(() => {
-***REMOVED***const previewLines: InvoiceLineRow[] = form.lines.map((line, idx) => {
-***REMOVED***  const quantity = Number(line.quantity.replace(',', '.')) || 0;
-***REMOVED***  const unitPrice = Number(line.unitPrice.replace(',', '.')) || 0;
-***REMOVED***  return {
-***REMOVED******REMOVED***id: `preview-${idx}`,
-***REMOVED******REMOVED***invoice_id: 'preview',
-***REMOVED******REMOVED***description: line.description || '-',
-***REMOVED******REMOVED***quantity,
-***REMOVED******REMOVED***unit_price: unitPrice,
-***REMOVED******REMOVED***amount_excl: quantity * unitPrice,
+***REMOVED***try {
+***REMOVED***  const previewLines: InvoiceLineRow[] = form.lines.map((line, idx) => {
+***REMOVED******REMOVED***const quantity = Number(line.quantity.replace(',', '.')) || 0;
+***REMOVED******REMOVED***const unitPrice = Number(line.unitPrice.replace(',', '.')) || 0;
+***REMOVED******REMOVED***return {
+***REMOVED******REMOVED***  id: `preview-${idx}`,
+***REMOVED******REMOVED***  invoice_id: 'preview',
+***REMOVED******REMOVED***  description: line.description || '-',
+***REMOVED******REMOVED***  quantity,
+***REMOVED******REMOVED***  unit_price: unitPrice,
+***REMOVED******REMOVED***  amount_excl: quantity * unitPrice,
+***REMOVED******REMOVED***};
+***REMOVED***  });
+***REMOVED***  const previewInvoice: InvoiceRow = {
+***REMOVED******REMOVED***id: editingId || 'preview',
+***REMOVED******REMOVED***invoice_number: editingId
+***REMOVED******REMOVED***  ? invoices.find((inv) => inv.id === editingId)?.invoice_number ?? null
+***REMOVED******REMOVED***  : `${buildCompanySlug(form.customerName || 'Klant')}_${new Date(
+***REMOVED******REMOVED******REMOVED***  form.issueDate || new Date().toISOString().slice(0, 10),
+***REMOVED******REMOVED******REMOVED***).getFullYear()}_..`,
+***REMOVED******REMOVED***customer_name: form.customerName || 'Klantnaam',
+***REMOVED******REMOVED***issue_date: form.issueDate || new Date().toISOString().slice(0, 10),
+***REMOVED******REMOVED***due_date: effectiveDueDate,
+***REMOVED******REMOVED***amount_excl: formTotals.totalExcl,
+***REMOVED******REMOVED***vat_rate: Number(form.vatRate) || 0,
+***REMOVED******REMOVED***amount_incl: formTotals.totalIncl,
+***REMOVED******REMOVED***currency: form.currency,
+***REMOVED******REMOVED***status: 'concept',
 ***REMOVED***  };
-***REMOVED***});
-***REMOVED***const previewInvoice: InvoiceRow = {
-***REMOVED***  id: editingId || 'preview',
-***REMOVED***  invoice_number: editingId
-***REMOVED******REMOVED***? invoices.find((inv) => inv.id === editingId)?.invoice_number ?? null
-***REMOVED******REMOVED***: `${buildCompanySlug(form.customerName || 'Klant')}_${new Date(
-***REMOVED******REMOVED******REMOVED***form.issueDate || new Date().toISOString().slice(0, 10),
-***REMOVED******REMOVED***  ).getFullYear()}_..`,
-***REMOVED***  customer_name: form.customerName || 'Klantnaam',
-***REMOVED***  issue_date: form.issueDate || new Date().toISOString().slice(0, 10),
-***REMOVED***  due_date: effectiveDueDate,
-***REMOVED***  amount_excl: formTotals.totalExcl,
-***REMOVED***  vat_rate: Number(form.vatRate) || 0,
-***REMOVED***  amount_incl: formTotals.totalIncl,
-***REMOVED***  currency: form.currency,
-***REMOVED***  status: 'concept',
-***REMOVED***};
-***REMOVED***const doc = generateInvoicePdf(previewInvoice, previewLines);
-***REMOVED***return doc.output('datauristring');
+***REMOVED***  const doc = generateInvoicePdf(previewInvoice, previewLines);
+***REMOVED***  return doc.output('datauristring');
+***REMOVED***} catch (err) {
+***REMOVED***  console.error('Error generating preview PDF:', err);
+***REMOVED***  return '';
+***REMOVED***}
   }, [
 ***REMOVED***editingId,
 ***REMOVED***invoices,
@@ -876,6 +873,8 @@ export default function FacturenPage() {
 ***REMOVED***effectiveDueDate,
 ***REMOVED***formTotals.totalExcl,
 ***REMOVED***formTotals.totalIncl,
+***REMOVED***companySettings,
+***REMOVED***customers,
   ]);
 
   return (
@@ -1070,8 +1069,16 @@ export default function FacturenPage() {
 ***REMOVED***  </div>
 
 ***REMOVED***  {showForm && (
-***REMOVED******REMOVED***<div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4 py-6">
-***REMOVED******REMOVED***  <div className="w-full max-w-6xl rounded-[1.8rem] border border-border bg-surface p-6 shadow-soft">
+***REMOVED******REMOVED***<div
+***REMOVED******REMOVED***  className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4 py-6 overflow-y-auto"
+***REMOVED******REMOVED***  onClick={(e) => {
+***REMOVED******REMOVED******REMOVED***if (e.target === e.currentTarget) {
+***REMOVED******REMOVED******REMOVED***  setShowForm(false);
+***REMOVED******REMOVED******REMOVED***  resetForm();
+***REMOVED******REMOVED******REMOVED***}
+***REMOVED******REMOVED***  }}
+***REMOVED******REMOVED***>
+***REMOVED******REMOVED***  <div className="w-full max-w-6xl rounded-[1.8rem] border border-border bg-surface p-6 shadow-soft my-6">
 ***REMOVED******REMOVED******REMOVED***<div className="mb-4 flex items-center justify-between">
 ***REMOVED******REMOVED******REMOVED***  <div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<h2 className="text-sm font-semibold text-text">

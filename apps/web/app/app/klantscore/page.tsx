@@ -54,7 +54,7 @@ export default function KlantscorePage() {
 
 ***REMOVED***const calculatedScores: CustomerScore[] = Object.entries(customerData).map(
 ***REMOVED***  ([customerName, invoices]) => {
-***REMOVED******REMOVED***const openInvoices = invoices.filter((inv) => inv.status === 'open');
+***REMOVED******REMOVED***const openInvoices = invoices.filter((inv) => inv.status !== 'concept');
 ***REMOVED******REMOVED***const overdueInvoices = openInvoices.filter((inv) => {
 ***REMOVED******REMOVED***  if (!inv.due_date) return false;
 ***REMOVED******REMOVED***  const dueDate = new Date(inv.due_date);

@@ -196,7 +196,163 @@ export default function HomePage() {
 ***REMOVED******REMOVED***</div>
 ***REMOVED***  </section>
 
-***REMOVED***  {/* overige secties onveranderd */}
+***REMOVED***  {/* Features section */}
+
+***REMOVED***  <section id="functies" className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
+***REMOVED******REMOVED***<div className="mb-12 text-center">
+***REMOVED******REMOVED***  <div className="mb-4 inline-flex items-center rounded-full bg-highlight px-4 py-2 text-sm font-semibold text-primary">
+***REMOVED******REMOVED******REMOVED***Wat Fiscaliq doet
+***REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED***  <h2 className="text-4xl font-semibold tracking-tight text-text sm:text-5xl">
+***REMOVED******REMOVED******REMOVED***Alles wat je nodig hebt, niets wat je niet nodig hebt
+***REMOVED******REMOVED***  </h2>
+***REMOVED******REMOVED***</div>
+
+***REMOVED******REMOVED***<div className="grid gap-8 md:grid-cols-2">
+***REMOVED******REMOVED***  {features.map((feature) => (
+***REMOVED******REMOVED******REMOVED***<div key={feature.title} className="rounded-3xl border border-border bg-surface p-8">
+***REMOVED******REMOVED******REMOVED***  <h3 className="text-xl font-semibold text-text">{feature.title}</h3>
+***REMOVED******REMOVED******REMOVED***  <p className="mt-3 text-base text-muted leading-relaxed">{feature.body}</p>
+***REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED***  ))}
+***REMOVED******REMOVED***</div>
+***REMOVED***  </section>
+
+***REMOVED***  {/* Pricing section */}
+
+***REMOVED***  <section id="prijzen" className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
+***REMOVED******REMOVED***<div className="mb-12 text-center">
+***REMOVED******REMOVED***  <h2 className="text-4xl font-semibold tracking-tight text-text sm:text-5xl">
+***REMOVED******REMOVED******REMOVED***Simpel en eerlijk geprijsd
+***REMOVED******REMOVED***  </h2>
+***REMOVED******REMOVED***  <p className="mt-4 text-lg text-muted">
+***REMOVED******REMOVED******REMOVED***Geen verborgen kosten, geen verwarrende pakketten. Eenduidelijk model.
+***REMOVED******REMOVED***  </p>
+***REMOVED******REMOVED***</div>
+
+***REMOVED******REMOVED***<div className="mx-auto max-w-md">
+***REMOVED******REMOVED***  <div className="rounded-3xl border-2 border-primary bg-surface p-8 shadow-soft">
+***REMOVED******REMOVED******REMOVED***<div className="text-center">
+***REMOVED******REMOVED******REMOVED***  <div className="inline-flex items-center rounded-full bg-highlight px-4 py-2 text-sm font-semibold text-primary mb-4">
+***REMOVED******REMOVED******REMOVED******REMOVED***Enig pakket
+***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***  <h3 className="text-3xl font-bold text-text">Fiscaliq</h3>
+***REMOVED******REMOVED******REMOVED***  <p className="mt-3 text-sm text-muted">Alles voor één vaste prijs</p>
+
+***REMOVED******REMOVED******REMOVED***  <div className="mt-8 text-center">
+***REMOVED******REMOVED******REMOVED******REMOVED***<span className="text-5xl font-bold text-text">9,99</span>
+***REMOVED******REMOVED******REMOVED******REMOVED***<span className="text-lg text-muted">/maand</span>
+***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***  <p className="mt-2 text-xs text-muted">Na gratis proefperiode van 30 dagen</p>
+
+***REMOVED******REMOVED******REMOVED***  <button className="mt-8 w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-primaryDark">
+***REMOVED******REMOVED******REMOVED******REMOVED***Start nu gratis
+***REMOVED******REMOVED******REMOVED***  </button>
+
+***REMOVED******REMOVED******REMOVED***  <div className="mt-8 space-y-3 border-t border-border pt-8 text-left">
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="text-sm text-text font-medium">Inbegrepen:</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***{[
+***REMOVED******REMOVED******REMOVED******REMOVED***  'Onbeperkt facturen & offertes',
+***REMOVED******REMOVED******REMOVED******REMOVED***  'Klantenbeheer',
+***REMOVED******REMOVED******REMOVED******REMOVED***  'BTW-berekening per kwartaal',
+***REMOVED******REMOVED******REMOVED******REMOVED***  'Bonnetjesupload (5GB)',
+***REMOVED******REMOVED******REMOVED******REMOVED***  'PDF-export alles',
+***REMOVED******REMOVED******REMOVED******REMOVED***  'Herinneringen versturen',
+***REMOVED******REMOVED******REMOVED******REMOVED***  'Basisrapportage',
+***REMOVED******REMOVED******REMOVED******REMOVED***  'Support via email',
+***REMOVED******REMOVED******REMOVED******REMOVED***].map((item) => (
+***REMOVED******REMOVED******REMOVED******REMOVED***  <div key={item} className="flex items-center gap-3 text-sm text-muted">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<svg className="h-4 w-4 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</svg>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{item}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED******REMOVED***))}
+***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED***</div>
+***REMOVED***  </section>
+
+***REMOVED***  {/* CTA section */}
+
+***REMOVED***  <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
+***REMOVED******REMOVED***<div className="rounded-3xl border border-border bg-surface p-12 text-center">
+***REMOVED******REMOVED***  <h2 className="text-4xl font-semibold tracking-tight text-text">Klaar om je boekhouden te vereenvoudigen?</h2>
+***REMOVED******REMOVED***  <p className="mt-4 text-lg text-muted">Geen creditcard nodig. Begin nu gratis.</p>
+***REMOVED******REMOVED***  <div className="mt-8 flex flex-wrap justify-center gap-4">
+***REMOVED******REMOVED******REMOVED***<a
+***REMOVED******REMOVED******REMOVED***  href="/register"
+***REMOVED******REMOVED******REMOVED***  className="rounded-full bg-primary px-8 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-primaryDark"
+***REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED***  Maak account aan
+***REMOVED******REMOVED******REMOVED***</a>
+***REMOVED******REMOVED******REMOVED***<a
+***REMOVED******REMOVED******REMOVED***  href="/app/dashboard"
+***REMOVED******REMOVED******REMOVED***  className="rounded-full border border-border bg-bg px-8 py-3 text-sm font-semibold text-text transition hover:bg-white"
+***REMOVED******REMOVED******REMOVED***>
+***REMOVED******REMOVED******REMOVED***  Demo bekijken
+***REMOVED******REMOVED******REMOVED***</a>
+***REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED***</div>
+***REMOVED***  </section>
+
+***REMOVED***  {/* Footer */}
+
+***REMOVED***  <footer className="border-t border-border/40 bg-bg/50">
+***REMOVED******REMOVED***<div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+***REMOVED******REMOVED***  <div className="grid gap-12 md:grid-cols-4">
+***REMOVED******REMOVED******REMOVED***<div>
+***REMOVED******REMOVED******REMOVED***  <div className="flex items-center gap-3">
+***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-surface shadow-soft">
+***REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-base font-bold text-primary">F</span>
+***REMOVED******REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED******REMOVED******REMOVED***<span className="font-semibold text-text">Fiscaliq</span>
+***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***  <p className="mt-3 text-sm text-muted">Boekhouden voor zzp'ers, simpel en eerlijk.</p>
+***REMOVED******REMOVED******REMOVED***</div>
+
+***REMOVED******REMOVED******REMOVED***<div>
+***REMOVED******REMOVED******REMOVED***  <div className="text-sm font-semibold text-text">Product</div>
+***REMOVED******REMOVED******REMOVED***  <div className="mt-4 space-y-2">
+***REMOVED******REMOVED******REMOVED******REMOVED***{['Functies', 'Prijzen', 'Dashboard', 'Interface'].map((item) => (
+***REMOVED******REMOVED******REMOVED******REMOVED***  <a key={item} href="#" className="block text-sm text-muted transition hover:text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{item}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </a>
+***REMOVED******REMOVED******REMOVED******REMOVED***))}
+***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***</div>
+
+***REMOVED******REMOVED******REMOVED***<div>
+***REMOVED******REMOVED******REMOVED***  <div className="text-sm font-semibold text-text">Bedrijf</div>
+***REMOVED******REMOVED******REMOVED***  <div className="mt-4 space-y-2">
+***REMOVED******REMOVED******REMOVED******REMOVED***{['Over', 'Blog', 'Vacatures', 'Contact'].map((item) => (
+***REMOVED******REMOVED******REMOVED******REMOVED***  <a key={item} href="#" className="block text-sm text-muted transition hover:text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{item}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </a>
+***REMOVED******REMOVED******REMOVED******REMOVED***))}
+***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***</div>
+
+***REMOVED******REMOVED******REMOVED***<div>
+***REMOVED******REMOVED******REMOVED***  <div className="text-sm font-semibold text-text">Juridisch</div>
+***REMOVED******REMOVED******REMOVED***  <div className="mt-4 space-y-2">
+***REMOVED******REMOVED******REMOVED******REMOVED***{['Privacy', 'Terms', 'Cookie policy'].map((item) => (
+***REMOVED******REMOVED******REMOVED******REMOVED***  <a key={item} href="#" className="block text-sm text-muted transition hover:text-text">
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{item}
+***REMOVED******REMOVED******REMOVED******REMOVED***  </a>
+***REMOVED******REMOVED******REMOVED******REMOVED***))}
+***REMOVED******REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED******REMOVED***</div>
+***REMOVED******REMOVED***  </div>
+
+***REMOVED******REMOVED***  <div className="mt-12 border-t border-border/40 pt-8">
+***REMOVED******REMOVED******REMOVED***<p className="text-center text-sm text-muted">
+***REMOVED******REMOVED******REMOVED***  © 2026 Fiscaliq. Gebouwd door ZZP'ers, voor ZZP'ers.
+***REMOVED******REMOVED******REMOVED***</p>
+***REMOVED******REMOVED***  </div>
+***REMOVED******REMOVED***</div>
+***REMOVED***  </footer>
 
 ***REMOVED***</main>
   );

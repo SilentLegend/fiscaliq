@@ -6,6 +6,29 @@ FiscalIQ is een Nederlandse boekhoudwebapp gebouwd door SilentLegend. Het is een
 
 ***
 
+## Recente Updates (20 april 2026)
+
+- Factuurformulier: Buitenklik sluit modal + overflow-y-auto voor grote formulieren
+- Input validatie: Autocorrect for names (capitaleFirst) in klanten form
+- WhatsApp share: Verwijderd blob PDF link (vereenvoudigd naar gewone message)
+- Reminder test: Gefixt status check (zoekt nu naar any invoice != 'concept')
+- Klantscore: Gefixt status filtering (toont nu vervallen facturen correct)
+- Settings icoon: Gewijzigd naar groter/beter tandwiel design
+- PDF preview: Error handling toegevoegd in useMemo, dependencies voltooid
+- No more emojis: Verwijderd uit alle berichten
+- Bonnetjes pagina: Compleet functioneel met Supabase backend, categorieën, totalen
+- Ritregistratie pagina: Compleet functioneel, KM-vergoeding berekening (0,19 EUR/km)
+- Navigation: Ritten item toegevoegd met custom trips icon
+- SQL schemas: receipts en trips tabellen met RLS policies aangemaakt
+
+## Volgende Work
+
+1. Database: Voer SQL scripts uit in Supabase (receipts.sql en trips.sql)
+2. Gebruikers testen: Bonnetjes en Ritten features
+3. Feature flags: Eventueel achter flags zetten als deze nog in beta zijn
+
+***
+
 ## Repository
 
 - **GitHub:** `https://github.com/SilentLegend/fiscaliq`
@@ -24,13 +47,24 @@ fiscaliq/
 ***REMOVED******REMOVED***│   │   │   └── page.tsx***REMOVED***← Facturenpagina (meest bewerkt)
 ***REMOVED******REMOVED***│   │   ├── klanten/
 ***REMOVED******REMOVED***│   │   │   └── page.tsx
-***REMOVED******REMOVED***│   │   └── dashboard/
-***REMOVED******REMOVED***│   │***REMOVED***   └── page.tsx
-***REMOVED******REMOVED***│   └── layout.tsx
-***REMOVED******REMOVED***├── lib/
-***REMOVED******REMOVED***│   └── supabaseClient.ts   ← Supabase client initialisatie
-***REMOVED******REMOVED***├── package.json
-***REMOVED******REMOVED***└── tsconfig.json
+***REMOVED******REMOVED***│   │   ├── bonnetjes/
+***REMOVED******REMOVED***│   │   │   └── page.tsx***REMOVED***← Bonnetjes/receipts management
+***REMOVED******REMOVED***│   │   ├── ritten/
+***REMOVED******REMOVED***│   │   │   └── page.tsx***REMOVED***← Ritregistratie/trips management
+***REMOVED******REMOVED***│   │   ├── dashboard/
+***REMOVED******REMOVED***│   │   │   └── page.tsx
+***REMOVED******REMOVED***│   │   └── layout.tsx***REMOVED***   ← Navigation sidebar met alle routes
+***REMOVED******REMOVED***│   ├── lib/
+***REMOVED******REMOVED***│   │   └── supabaseClient.ts   ← Supabase client initialisatie
+***REMOVED******REMOVED***│   ├── page.tsx***REMOVED******REMOVED******REMOVED*** ← Publieke landingspagina
+***REMOVED******REMOVED***│   ├── login/ en register/
+***REMOVED******REMOVED***│   ├── package.json
+***REMOVED******REMOVED***│   └── tsconfig.json
+***REMOVED******REMOVED***└── supabase/
+***REMOVED******REMOVED******REMOVED***├── customers.sql
+***REMOVED******REMOVED******REMOVED***├── invoices.sql
+***REMOVED******REMOVED******REMOVED***├── receipts.sql***REMOVED******REMOVED***← Bonnetjes schema
+***REMOVED******REMOVED******REMOVED***└── trips.sql***REMOVED******REMOVED***   ← Ritten schema
 ```
 
 ***
@@ -107,6 +141,36 @@ Bevat de gegevens van de eigen onderneming (eenmalig record via `.single()`).
 | `iban` | text | Eigen IBAN |
 | `email` | text | Eigen e-mail |
 | `website` | text | Eigen website |
+
+#### `receipts` (Bonnetjes)
+Bonnetjes en kostenposten voor boekhouden.
+
+| Kolom | Type | Omschrijving |
+|-------|------|--------------|
+| `id` | uuid | Primary key |
+| `user_id` | uuid | FK naar `auth.users.id` |
+| `date` | date | Datum bonnetje |
+| `description` | text | Omschrijving (bijv. "Kantoor benodigdheden") |
+| `category` | text | Categorie: `reiskosten`, `eten-drinken`, `kantoor`, `software`, `overige` |
+| `amount` | numeric(10,2) | Bedrag (EUR, positief) |
+| `file_url` | text | URL naar gescande bonbon (optioneel) |
+| `created_at` | timestamp | Aangemaakt op |
+
+#### `trips` (Ritregistratie)
+Zakelijke ritten met kilometervergoeding berekening.
+
+| Kolom | Type | Omschrijving |
+|-------|------|--------------|
+| `id` | uuid | Primary key |
+| `user_id` | uuid | FK naar `auth.users.id` |
+| `date` | date | Datum rit |
+| `description` | text | Omschrijving doel (bijv. "Klantbezoek Amsterdam") |
+| `start_location` | text | Vertrekpunt |
+| `end_location` | text | Bestemming |
+| `km` | numeric(8,2) | Kilometers (positief) |
+| `cost` | numeric(10,2) | Vergoeding (optioneel, standaard 0,19 EUR/km) |
+| `notes` | text | Opmerkingen |
+| `created_at` | timestamp | Aangemaakt op |
 
 ***
 
@@ -269,3 +333,34 @@ interface InvoiceForm {
 - Doelgroep blijft: **ZZP'ers en kleine ondernemers**.
 - Toekomstige kernfeature: **bankkoppeling** voor automatische betaalstatus per factuur.
 - Publieke factuurpagina is **niet gewenst**; verzending loopt via bestaande kanalen (mail/WhatsApp) en betaling via reguliere bankoverschrijving.
+
+### Bonnetjes (Receipts)
+- Pagina: `/app/bonnetjes`
+- Functionaliteit: Volledige CRUD voor bonnetjes/kostenposten
+- Categorieën: `reiskosten`, `eten-drinken`, `kantoor`, `software`, `overige` (kleur-gecodeerd)
+- Features:
+  - Modal form voor toevoegen (datum, omschrijving, categorie, bedrag)
+  - Tabel view met sorteer-optie (nieuwste eerst)
+  - Delete-knop per rij
+  - Zijbalk met: totaalbedrag, aantal bonnetjes, breakdown per categorie
+  - Error handling voor validatie (omschrijving verplicht, bedrag positief)
+  - Realtime update na insert/delete
+- Database: `receipts` tabel met user_id-based RLS policies
+
+### Ritregistratie (Trips)
+- Pagina: `/app/ritten`
+- Functionaliteit: Registreer zakelijke ritten met automatische kilometervergoeding
+- Features:
+  - Modal form voor toevoegen (datum, beschrijving, vertrekpunt, bestemming, km, optioneel bedrag, notities)
+  - Tabel view met: datum, route (van → naar), km, vergoeding berekend
+  - Automatische vergoedingsberekening: 0,19 EUR/km (Nederlands wetgeving 2026)
+  - Mogelijkheid handmatig bedrag aan te passen
+  - Zijbalk met: totale km, totale vergoeding, aantal ritten, info-box over vergoeding
+  - Delete-functie per rit
+  - Empty state met CTA
+- Database: `trips` tabel met user_id-based RLS policies
+
+### Navigatie update
+- Sidebar nav items uitgebreid met:
+  - Bonnetjes (icon: bonnetje/receipt)
+  - Ritten (icon: route/compass)

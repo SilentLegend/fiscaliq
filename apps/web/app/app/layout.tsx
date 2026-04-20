@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabaseClient';
 type NavItem = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'invoice' | 'customers' | 'receipts' | 'vat' | 'roadmap' | 'score' | 'settings';
+  icon: 'dashboard' | 'invoice' | 'customers' | 'receipts' | 'trips' | 'vat' | 'roadmap' | 'score' | 'settings';
 };
 
 const baseNavItems: NavItem[] = [
@@ -16,6 +16,7 @@ const baseNavItems: NavItem[] = [
   { href: '/app/facturen', label: 'Facturen', icon: 'invoice' },
   { href: '/app/klanten', label: 'Klanten', icon: 'customers' },
   { href: '/app/bonnetjes', label: 'Bonnetjes', icon: 'receipts' },
+  { href: '/app/ritten', label: 'Ritten', icon: 'trips' },
   { href: '/app/btw', label: 'BTW', icon: 'vat' },
   { href: '/app/roadmap', label: 'Roadmap', icon: 'roadmap' },
   { href: '/app/instellingen', label: 'Instellingen', icon: 'settings' },
@@ -59,6 +60,15 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED******REMOVED***  <path d="M9 13h4" />
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
+***REMOVED***case 'trips':
+***REMOVED***  return (
+***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
+***REMOVED******REMOVED***  <path d="M12 3l8 4v8l-8 4-8-4v-8l8-4z" />
+***REMOVED******REMOVED***  <path d="M12 3v10" />
+***REMOVED******REMOVED***  <path d="M4 7l8 4" />
+***REMOVED******REMOVED***  <path d="M20 7l-8 4" />
+***REMOVED******REMOVED***</svg>
+***REMOVED***  );
 ***REMOVED***case 'vat':
 ***REMOVED***  return (
 ***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
@@ -69,14 +79,11 @@ function NavIcon({ name }: { name: NavItem['icon'] }) {
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
 ***REMOVED***case 'settings':
-***REMOVED***  // Simpel, strak tandwiel
 ***REMOVED***  return (
 ***REMOVED******REMOVED***<svg aria-hidden viewBox="0 0 24 24" className={base} fill="none" strokeWidth={1.6}>
 ***REMOVED******REMOVED***  <circle cx="12" cy="12" r="3" />
-***REMOVED******REMOVED***  <path d="M4 12h2.2M17.8 12H20" />
-***REMOVED******REMOVED***  <path d="m7.05 7.05 1.56 1.56m6.78 6.78 1.56 1.56" />
-***REMOVED******REMOVED***  <path d="M12 4v2.2M12 17.8V20" />
-***REMOVED******REMOVED***  <path d="m7.05 16.95 1.56-1.56m6.78-6.78 1.56-1.56" />
+***REMOVED******REMOVED***  <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+***REMOVED******REMOVED***  <circle cx="12" cy="12" r="8" />
 ***REMOVED******REMOVED***</svg>
 ***REMOVED***  );
 ***REMOVED***case 'roadmap':
@@ -134,9 +141,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navItems = [
-***REMOVED***...baseNavItems.slice(0, 6),
+***REMOVED***...baseNavItems.slice(0, 7),
 ***REMOVED***...(enableClientScore ? ([{ href: '/app/klantscore', label: 'Klantscore', icon: 'score' }] as NavItem[]) : []),
-***REMOVED***baseNavItems[6],
+***REMOVED***baseNavItems[7],
   ];
 
   useEffect(() => {
