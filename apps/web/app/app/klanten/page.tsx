@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '../../../lib/supabaseClient';
 
 type CustomerStatus = 'actief' | 'inactief';
 type DeliveryMethod = 'email' | 'post';
@@ -31,7 +32,31 @@ interface CustomerRecord {
   status: CustomerStatus;
 }
 
-const STORAGE_KEY = 'fiscaliq.customers.v1';
+interface DbCustomer {
+  id: string;
+  name: string;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  vat_number: string | null;
+  kvk: string | null;
+  email: string | null;
+  phone: string | null;
+  created_at: string | null;
+  customer_number: string | null;
+  legal_form: string | null;
+  website: string | null;
+  contact_name: string | null;
+  department: string | null;
+  country: string | null;
+  payment_term_days: number | null;
+  currency: string | null;
+  vat_rate_preference: string | null;
+  iban: string | null;
+  delivery_method: DeliveryMethod | null;
+  notes: string | null;
+  status: CustomerStatus | null;
+}
 
 function makeCustomerNumber() {
   return `KL-${Date.now().toString().slice(-6)}`;
@@ -66,6 +91,7 @@ function makeEmptyForm(): Omit<CustomerRecord, 'id'> {
 
 export default function KlantenPage() {
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,23 +99,52 @@ export default function KlantenPage() {
   const [form, setForm] = useState<Omit<CustomerRecord, 'id'>>(makeEmptyForm());
 
   useEffect(() => {
-***REMOVED***try {
-***REMOVED***  const raw = localStorage.getItem(STORAGE_KEY);
-***REMOVED***  if (!raw) return;
-***REMOVED***  const parsed = JSON.parse(raw) as CustomerRecord[];
-***REMOVED***  if (Array.isArray(parsed)) setCustomers(parsed);
-***REMOVED***} catch (err) {
-***REMOVED***  console.error('Kon klanten niet laden uit localStorage:', err);
-***REMOVED***}
+***REMOVED***loadCustomers();
   }, []);
 
-  useEffect(() => {
-***REMOVED***try {
-***REMOVED***  localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
-***REMOVED***} catch (err) {
-***REMOVED***  console.error('Kon klanten niet opslaan in localStorage:', err);
+  async function loadCustomers() {
+***REMOVED***setLoading(true);
+***REMOVED***const { data, error: loadError } = await supabase
+***REMOVED***  .from('customers')
+***REMOVED***  .select('*')
+***REMOVED***  .order('created_at', { ascending: false });
+
+***REMOVED***if (loadError) {
+***REMOVED***  setError('Kon klanten niet ophalen uit de database.');
+***REMOVED***  setLoading(false);
+***REMOVED***  return;
 ***REMOVED***}
-  }, [customers]);
+
+***REMOVED***const rows = (data as DbCustomer[]) ?? [];
+***REMOVED***setCustomers(
+***REMOVED***  rows.map((row) => ({
+***REMOVED******REMOVED***id: row.id,
+***REMOVED******REMOVED***customerNumber: row.customer_number ?? '',
+***REMOVED******REMOVED***companyName: row.name ?? '',
+***REMOVED******REMOVED***legalForm: row.legal_form ?? '',
+***REMOVED******REMOVED***kvkNumber: row.kvk ?? '',
+***REMOVED******REMOVED***vatNumber: row.vat_number ?? '',
+***REMOVED******REMOVED***website: row.website ?? '',
+***REMOVED******REMOVED***contactName: row.contact_name ?? '',
+***REMOVED******REMOVED***email: row.email ?? '',
+***REMOVED******REMOVED***phone: row.phone ?? '',
+***REMOVED******REMOVED***department: row.department ?? '',
+***REMOVED******REMOVED***streetAndNumber: row.street ?? '',
+***REMOVED******REMOVED***postalCode: row.postal_code ?? '',
+***REMOVED******REMOVED***city: row.city ?? '',
+***REMOVED******REMOVED***country: row.country ?? 'Nederland',
+***REMOVED******REMOVED***paymentTermDays: row.payment_term_days ? String(row.payment_term_days) : '30',
+***REMOVED******REMOVED***currency: row.currency ?? 'EUR',
+***REMOVED******REMOVED***vatRate: row.vat_rate_preference ?? '21',
+***REMOVED******REMOVED***iban: row.iban ?? '',
+***REMOVED******REMOVED***deliveryMethod: row.delivery_method ?? 'email',
+***REMOVED******REMOVED***notes: row.notes ?? '',
+***REMOVED******REMOVED***createdAt: row.created_at ? row.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
+***REMOVED******REMOVED***status: row.status ?? 'actief',
+***REMOVED***  })),
+***REMOVED***);
+***REMOVED***setLoading(false);
+  }
 
   const filteredCustomers = useMemo(() => {
 ***REMOVED***const q = query.trim().toLowerCase();
@@ -121,7 +176,7 @@ export default function KlantenPage() {
 ***REMOVED***setShowForm(true);
   }
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
 ***REMOVED***e.preventDefault();
 ***REMOVED***setError(null);
 
@@ -138,43 +193,77 @@ export default function KlantenPage() {
 ***REMOVED***  return;
 ***REMOVED***}
 
-***REMOVED***const customerNumberInUse = customers.some(
-***REMOVED***  (c) =>
-***REMOVED******REMOVED***c.customerNumber.trim().toLowerCase() === form.customerNumber.trim().toLowerCase() &&
-***REMOVED******REMOVED***c.id !== editingId,
-***REMOVED***);
+***REMOVED***const customerNumberValue = form.customerNumber.trim().toLowerCase();
+***REMOVED***const customerNumberInUse =
+***REMOVED***  customerNumberValue.length > 0 &&
+***REMOVED***  customers.some(
+***REMOVED******REMOVED***(c) =>
+***REMOVED******REMOVED***  c.customerNumber.trim().toLowerCase() === customerNumberValue && c.id !== editingId,
+***REMOVED***  );
 ***REMOVED***if (customerNumberInUse) {
 ***REMOVED***  setError('Klantnummer bestaat al. Kies een uniek klantnummer.');
 ***REMOVED***  return;
 ***REMOVED***}
 
+***REMOVED***const payload = {
+***REMOVED***  customer_number: form.customerNumber || null,
+***REMOVED***  name: form.companyName,
+***REMOVED***  legal_form: form.legalForm || null,
+***REMOVED***  kvk: form.kvkNumber || null,
+***REMOVED***  vat_number: form.vatNumber || null,
+***REMOVED***  website: form.website || null,
+***REMOVED***  contact_name: form.contactName || null,
+***REMOVED***  email: form.email || null,
+***REMOVED***  phone: form.phone || null,
+***REMOVED***  department: form.department || null,
+***REMOVED***  street: form.streetAndNumber || null,
+***REMOVED***  postal_code: form.postalCode || null,
+***REMOVED***  city: form.city || null,
+***REMOVED***  country: form.country || null,
+***REMOVED***  payment_term_days: Number(form.paymentTermDays) || 30,
+***REMOVED***  currency: form.currency || 'EUR',
+***REMOVED***  vat_rate_preference: form.vatRate || '21',
+***REMOVED***  iban: form.iban || null,
+***REMOVED***  delivery_method: form.deliveryMethod,
+***REMOVED***  notes: form.notes || null,
+***REMOVED***  status: form.status,
+***REMOVED***  created_at: form.createdAt || new Date().toISOString().slice(0, 10),
+***REMOVED***  updated_at: new Date().toISOString(),
+***REMOVED***};
+
 ***REMOVED***if (editingId) {
-***REMOVED***  setCustomers((prev) =>
-***REMOVED******REMOVED***prev.map((c) =>
-***REMOVED******REMOVED***  c.id === editingId
-***REMOVED******REMOVED******REMOVED***? {
-***REMOVED******REMOVED******REMOVED******REMOVED***...c,
-***REMOVED******REMOVED******REMOVED******REMOVED***...form,
-***REMOVED******REMOVED******REMOVED***  }
-***REMOVED******REMOVED******REMOVED***: c,
-***REMOVED******REMOVED***),
-***REMOVED***  );
+***REMOVED***  const { error: updateError } = await supabase
+***REMOVED******REMOVED***.from('customers')
+***REMOVED******REMOVED***.update(payload)
+***REMOVED******REMOVED***.eq('id', editingId);
+***REMOVED***  if (updateError) {
+***REMOVED******REMOVED***setError('Kon klant niet bijwerken in de database.');
+***REMOVED******REMOVED***return;
+***REMOVED***  }
 ***REMOVED***} else {
-***REMOVED***  setCustomers((prev) => [
-***REMOVED******REMOVED***{
-***REMOVED******REMOVED***  id: crypto.randomUUID(),
-***REMOVED******REMOVED***  ...form,
-***REMOVED******REMOVED***},
-***REMOVED******REMOVED***...prev,
-***REMOVED***  ]);
+***REMOVED***  const { error: insertError } = await supabase.from('customers').insert(payload);
+***REMOVED***  if (insertError) {
+***REMOVED******REMOVED***setError(
+***REMOVED******REMOVED***  insertError.message.includes('customers_user_customer_number_uidx')
+***REMOVED******REMOVED******REMOVED***? 'Klantnummer bestaat al in de database.'
+***REMOVED******REMOVED******REMOVED***: 'Kon klant niet opslaan in de database.',
+***REMOVED******REMOVED***);
+***REMOVED******REMOVED***return;
+***REMOVED***  }
 ***REMOVED***}
 
+***REMOVED***await loadCustomers();
 ***REMOVED***setShowForm(false);
 ***REMOVED***resetForm();
   }
 
-  function handleDelete(id: string) {
-***REMOVED***setCustomers((prev) => prev.filter((c) => c.id !== id));
+  async function handleDelete(id: string) {
+***REMOVED***const { error: deleteError } = await supabase.from('customers').delete().eq('id', id);
+***REMOVED***if (deleteError) {
+***REMOVED***  setError('Kon klant niet verwijderen.');
+***REMOVED***  return;
+***REMOVED***}
+***REMOVED***await loadCustomers();
   }
 
   return (
@@ -222,7 +311,13 @@ export default function KlantenPage() {
 ***REMOVED******REMOVED******REMOVED***  </tr>
 ***REMOVED******REMOVED******REMOVED***</thead>
 ***REMOVED******REMOVED******REMOVED***<tbody>
-***REMOVED******REMOVED******REMOVED***  {filteredCustomers.length === 0 ? (
+***REMOVED******REMOVED******REMOVED***  {loading ? (
+***REMOVED******REMOVED******REMOVED******REMOVED***<tr>
+***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-6 text-center text-xs text-muted" colSpan={6}>
+***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Klanten laden...
+***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
+***REMOVED******REMOVED******REMOVED******REMOVED***</tr>
+***REMOVED******REMOVED******REMOVED***  ) : filteredCustomers.length === 0 ? (
 ***REMOVED******REMOVED******REMOVED******REMOVED***<tr>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-6 text-center text-xs text-muted" colSpan={6}>
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***Nog geen klanten. Voeg je eerste klant toe.
