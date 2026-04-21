@@ -6,78 +6,57 @@ FiscalIQ is een Nederlandse boekhoudwebapp gebouwd door SilentLegend. Het is een
 
 ***
 
-## KRITIEK: Supabase Database Status (21 april 2026 - ISSUES GEVONDEN)
+## Supabase Database Status (21 april 2026 - FIXED)
 
-### Problemen Geïdentificeerd
+### ✅ Tabel Status
 
-**Tabellen die NIET bestaan in Supabase:**
-- ❌ `public.receipts` (Bonnetjes tabel) - 404 Not Found
-- ❌ `public.trips` (Ritregistratie tabel) - 404 Not Found
+**Bestaande Tabellen:**
+- ✅ `public.invoices` - Werkend (1 row)
+- ✅ `public.customers` - Werkend (1 row)
+- ✅ `public.receipts` - Aangemaakt via setup-db.ts
+- ✅ `public.trips` - Aangemaakt via setup-db.ts
+- ✅ `public.invoice_lines` - Werkend (1 row)
 
-**Tabellen die BESTAAN maar FOUTE KOLOMMEN hebben:**
-- ⚠️ `public.invoices` - Ontbrekende kolom 'customer_id', bestaat niet in schema
-- ⚠️ `public.customers` - Kolom 'kvk_number' wordt verwacht maar heet 'kvk'
-- ⚠️ `public.invoice_lines` - Test mislukt door UUID format issue
+**RLS Policies:** Alle tabellen hebben Row Level Security enabled
 
-**Gevolgen voor App:**
-- Bonnetjes pagina: INSERT fails (tabel bestaat niet)
-- Ritten pagina: INSERT fails (tabel bestaat niet)
-- Frontend error: "Could not find the table 'public.receipts' in the schema cache"
-- Frontend error: "Could not find the table 'public.trips' in the schema cache"
+**Database Connection:** 
+- ✅ Supabase Secret Key geïmplementeerd in `/supabase/supabase.ts`
+- ✅ Setup script (`setup-db.ts`) succesvol uitgevoerd
+- ✅ Alle tabellen nu beschikbaar
 
-### URGENT: SQL Scripts Moeten in Supabase Worden Geupload
+### Wat werd gefixed:
 
-**Stappen om te fixen:**
+1. **db-verify.ts script bijgewerkt:**
+   - Correcte kolom names: `customer_name` (niet customer_id), `kvk` (niet kvk_number)
+   - Invoice payload nu compleet met `vat_rate`
+   - Invoice_lines nu met juiste UUID format
 
-1. **Open Supabase dashboard:** https://supabase.com/dashboard/project/hcuybmrlozknmyijqabp
-2. **Ga naar: Project > SQL Editor**
-3. **Voer deze scripts uit in volgorde:**
+2. **setup-db.ts script aangemaakt:**
+   - Creëert `receipts` en `trips` tabellen
+   - Voegt RLS policies toe
+   - Maakt performance indexes aan
+   - Verwijdert oude policies als ze bestaan (idempotent)
 
-**Script 1 - Receipts tabel aanmaken:**
-```sql
-CREATE TABLE IF NOT EXISTS public.receipts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  date DATE NOT NULL DEFAULT CURRENT_DATE,
-  description TEXT NOT NULL,
-  category TEXT NOT NULL CHECK (category IN ('reiskosten', 'eten-drinken', 'kantoor', 'software', 'overige')),
-  amount NUMERIC(10, 2) NOT NULL,
-  file_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT amount_positive CHECK (amount > 0)
-);
+3. **Supabase connectie setup:**
+   - Secret key toegevoegd aan `supabase/supabase.ts`
+   - Admin access nu beschikbaar voor database operaties
 
-ALTER TABLE public.receipts ENABLE ROW LEVEL SECURITY;
+### Huidige problemen opgelost:
 
-CREATE POLICY "Users can view their own receipts"
-  ON public.receipts FOR SELECT
-  USING (auth.uid() = user_id);
+- ✅ Receipts/trips tabellen bestaan nu
+- ✅ RLS policies zijn actief
+- ✅ Kolom names kloppen met frontend code
+- ✅ Build process werkend
+- ⚠️ Front-end apps moeten nog geverifieerd worden dat ze werkelijk data kunnen opslaan
 
-CREATE POLICY "Users can insert their own receipts"
-  ON public.receipts FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+### Next: Frontend Testing
 
-CREATE POLICY "Users can delete their own receipts"
-  ON public.receipts FOR DELETE
-  USING (auth.uid() = user_id);
-
-CREATE INDEX receipts_user_id_date_idx ON public.receipts(user_id, date DESC);
-```
-
-**Script 2 - Trips tabel aanmaken:**
-```sql
-CREATE TABLE IF NOT EXISTS public.trips (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  date DATE NOT NULL DEFAULT CURRENT_DATE,
-  description TEXT NOT NULL,
-  start_location TEXT NOT NULL,
-  end_location TEXT NOT NULL,
-  km NUMERIC(8, 2) NOT NULL,
-  cost NUMERIC(10, 2),
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+Stappen om alles te verifiëren:
+1. Test `/test-database` pagina om CRUD operaties te verifiëren
+2. Probeer een bonnetje toe te voegen via `/app/bonnetjes`
+3. Probeer een rit toe te voegen via `/app/ritten`
+4. Check browser console voor errors
+5. Verifieer data verschijnt in Supabase dashboard
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT km_positive CHECK (km > 0),
   CONSTRAINT cost_positive CHECK (cost IS NULL OR cost > 0)
@@ -98,13 +77,6 @@ CREATE POLICY "Users can delete their own trips"
   USING (auth.uid() = user_id);
 
 CREATE INDEX trips_user_id_date_idx ON public.trips(user_id, date DESC);
-```
-
-**Na het uitvoeren:**
-- Run test op `/test-database` pagina
-- Controleer browser console op errors
-- Verificatie script zal nu receipts/trips kunnen aanmaken
-
 ***
 
 ## Recente Updates (21 april 2026)
@@ -113,13 +85,20 @@ CREATE INDEX trips_user_id_date_idx ON public.trips(user_id, date DESC);
 - Email reminder feature volledig verwijderd (gepland voor toekomstige versie)
 - Verwijderd: `enableAutoReminders` state, `testReminder()` functie
 - Verwijderd: email reminder UI toggle, Resend dependency
-- Verwijderd: files `lib/email-service.ts`, `lib/reminder-handler.ts`, `app/api/reminders/route.ts`, `supabase/company-settings.sql`
+- Verwijderd: files `lib/email-service.ts`, `lib/reminder-handler.ts`, `app/api/reminders/route.ts`
 - `vercel.json` leeggemaakt
 
 **Error Logging Toegevoegd:**
 - Bonnetjes pagina: `console.error()` logs tonen nu werkelijke Supabase foutmeldingen
 - Ritten pagina: `console.error()` logs tonen nu werkelijke Supabase foutmeldingen
 - Klantscore pagina: Auth check en invoice count logging toegevoegd voor debugging
+
+**Database Setup & Fixes:**
+- Supabase Secret Key geïmplementeerd in `supabase/supabase.ts`
+- `setup-db.ts` script aangemaakt en succesvol uitgevoerd
+- Receipts en trips tabellen nu aangemaakt in Supabase
+- RLS policies actief op alle tabellen
+- db-verify.ts script bijgewerkt met correcte kolom names
 
 **Database Verificatie Tools:**
 - `/apps/web/app/test-database` pagina met volledige database verificatie
@@ -142,10 +121,10 @@ CREATE INDEX trips_user_id_date_idx ON public.trips(user_id, date DESC);
 2. ✅ DONE: Error logging toevoegen
 3. ✅ DONE: Database verificatie tool maken
 4. ✅ DONE: PDF layout verbeteren
-5. 🔴 KRITIEK: SQL scripts uitvoeren in Supabase (receipts & trips tabellen aanmaken)
-6. TODO: Database volledige integriteitscheck na SQL scripts
-7. TODO: Bonnetjes & Ritten features testen
-8. TODO: Klantscore feature volledig debuggen
+5. ✅ DONE: Receipts & trips tabellen aanmaken
+6. TODO: Frontend CRUD testing (bonnetjes/ritten)
+7. TODO: Klantscore feature testing
+8. TODO: Database volledige integriteitscheck
 
 ***
 
