@@ -91,45 +91,9 @@ export default function InstellingenPage() {
 ***REMOVED***setSaving(false);
   }
 
-  function persistFlags(next: { enableAutoReminders: boolean; enableClientScore: boolean }) {
+  function persistFlags(next: { enableClientScore: boolean }) {
 ***REMOVED***localStorage.setItem('fiscaliq.featureFlags.v1', JSON.stringify(next));
 ***REMOVED***window.dispatchEvent(new StorageEvent('storage', { key: 'fiscaliq.featureFlags.v1' }));
-  }
-
-  async function testReminder() {
-***REMOVED***setTestingReminder(true);
-***REMOVED***setMessage(null);
-***REMOVED***setError(null);
-***REMOVED***
-***REMOVED***try {
-***REMOVED***  // Call the reminder API endpoint
-***REMOVED***  const response = await fetch('/api/reminders', {
-***REMOVED******REMOVED***method: 'POST',
-***REMOVED******REMOVED***headers: {
-***REMOVED******REMOVED***  'Content-Type': 'application/json',
-***REMOVED******REMOVED***},
-***REMOVED******REMOVED***body: JSON.stringify({ test: true }),
-***REMOVED***  });
-
-***REMOVED***  if (!response.ok) {
-***REMOVED******REMOVED***throw new Error(`API error: ${response.status}`);
-***REMOVED***  }
-
-***REMOVED***  const data = await response.json();
-
-***REMOVED***  if (data.sent > 0) {
-***REMOVED******REMOVED***setMessage(`Herinneringsmail verzonden! ${data.sent} klanten ontvangen een herinnering voor vervallen facturen.`);
-***REMOVED***  } else if (data.sent === 0 && data.failed === 0) {
-***REMOVED******REMOVED***setMessage('Geen vervallen facturen gevonden. Alle facturen zijn betaald of nog niet vervallen!');
-***REMOVED***  } else {
-***REMOVED******REMOVED***setMessage(`Test voltooid. ${data.sent} succesvol verzonden, ${data.failed} mislukt.`);
-***REMOVED***  }
-***REMOVED***} catch (err) {
-***REMOVED***  console.error('Reminder test error:', err);
-***REMOVED***  setError('Herinneringsmail test mislukt. Controleer of Resend API key is ingesteld.');
-***REMOVED***}
-***REMOVED***
-***REMOVED***setTestingReminder(false);
   }
 
   return (
