@@ -106,35 +106,31 @@ export default function InstellingenPage() {
 ***REMOVED***setError(null);
 ***REMOVED***
 ***REMOVED***try {
-***REMOVED***  // Fetch invoices to find ones that are overdue
-***REMOVED***  const { data: invoices, error: invoicesError } = await supabase
-***REMOVED******REMOVED***.from('invoices')
-***REMOVED******REMOVED***.select('*')
-***REMOVED******REMOVED***.eq('status', 'open')
-***REMOVED******REMOVED***.order('due_date', { ascending: true });
-
-***REMOVED***  if (invoicesError) {
-***REMOVED******REMOVED***setError('Kon openstaande facturen niet ophalen.');
-***REMOVED******REMOVED***setTestingReminder(false);
-***REMOVED******REMOVED***return;
-***REMOVED***  }
-
-***REMOVED***  const now = new Date();
-***REMOVED***  const overdueInvoices = (invoices as any[] || []).filter((inv) => {
-***REMOVED******REMOVED***if (!inv.due_date) return false;
-***REMOVED******REMOVED***const dueDate = new Date(inv.due_date);
-***REMOVED******REMOVED***return dueDate < now;
+***REMOVED***  // Call the reminder API endpoint
+***REMOVED***  const response = await fetch('/api/reminders', {
+***REMOVED******REMOVED***method: 'POST',
+***REMOVED******REMOVED***headers: {
+***REMOVED******REMOVED***  'Content-Type': 'application/json',
+***REMOVED******REMOVED***},
+***REMOVED******REMOVED***body: JSON.stringify({ test: true }),
 ***REMOVED***  });
 
-***REMOVED***  if (overdueInvoices.length === 0) {
-***REMOVED******REMOVED***setMessage('Test geslaagd! Er zijn geen vervallen facturen om te herinneren.');
+***REMOVED***  if (!response.ok) {
+***REMOVED******REMOVED***throw new Error(`API error: ${response.status}`);
+***REMOVED***  }
+
+***REMOVED***  const data = await response.json();
+
+***REMOVED***  if (data.sent > 0) {
+***REMOVED******REMOVED***setMessage(`Herinneringsmail verzonden! ${data.sent} klanten ontvangen een herinnering voor vervallen facturen.`);
+***REMOVED***  } else if (data.sent === 0 && data.failed === 0) {
+***REMOVED******REMOVED***setMessage('Geen vervallen facturen gevonden. Alle facturen zijn betaald of nog niet vervallen!');
 ***REMOVED***  } else {
-***REMOVED******REMOVED***const count = overdueInvoices.length;
-***REMOVED******REMOVED***setMessage(`Test geslaagd! Zou ${count} klant(en) herinneren voor vervallen factuur${count !== 1 ? 'en' : ''}.`);
+***REMOVED******REMOVED***setMessage(`Test voltooid. ${data.sent} succesvol verzonden, ${data.failed} mislukt.`);
 ***REMOVED***  }
 ***REMOVED***} catch (err) {
 ***REMOVED***  console.error('Reminder test error:', err);
-***REMOVED***  setError('Herinnering test mislukt. Controleer de console.');
+***REMOVED***  setError('Herinneringsmail test mislukt. Controleer of Resend API key is ingesteld.');
 ***REMOVED***}
 ***REMOVED***
 ***REMOVED***setTestingReminder(false);
