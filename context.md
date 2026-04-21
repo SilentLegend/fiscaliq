@@ -6,6 +6,107 @@ FiscalIQ is een Nederlandse boekhoudwebapp gebouwd door SilentLegend. Het is een
 
 ***
 
+## KRITIEK: Supabase Database Status (21 april 2026 - ISSUES GEVONDEN)
+
+### Problemen Geïdentificeerd
+
+**Tabellen die NIET bestaan in Supabase:**
+- ❌ `public.receipts` (Bonnetjes tabel) - 404 Not Found
+- ❌ `public.trips` (Ritregistratie tabel) - 404 Not Found
+
+**Tabellen die BESTAAN maar FOUTE KOLOMMEN hebben:**
+- ⚠️ `public.invoices` - Ontbrekende kolom 'customer_id', bestaat niet in schema
+- ⚠️ `public.customers` - Kolom 'kvk_number' wordt verwacht maar heet 'kvk'
+- ⚠️ `public.invoice_lines` - Test mislukt door UUID format issue
+
+**Gevolgen voor App:**
+- Bonnetjes pagina: INSERT fails (tabel bestaat niet)
+- Ritten pagina: INSERT fails (tabel bestaat niet)
+- Frontend error: "Could not find the table 'public.receipts' in the schema cache"
+- Frontend error: "Could not find the table 'public.trips' in the schema cache"
+
+### URGENT: SQL Scripts Moeten in Supabase Worden Geupload
+
+**Stappen om te fixen:**
+
+1. **Open Supabase dashboard:** https://supabase.com/dashboard/project/hcuybmrlozknmyijqabp
+2. **Ga naar: Project > SQL Editor**
+3. **Voer deze scripts uit in volgorde:**
+
+**Script 1 - Receipts tabel aanmaken:**
+```sql
+CREATE TABLE IF NOT EXISTS public.receipts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('reiskosten', 'eten-drinken', 'kantoor', 'software', 'overige')),
+  amount NUMERIC(10, 2) NOT NULL,
+  file_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT amount_positive CHECK (amount > 0)
+);
+
+ALTER TABLE public.receipts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own receipts"
+  ON public.receipts FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own receipts"
+  ON public.receipts FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own receipts"
+  ON public.receipts FOR DELETE
+  USING (auth.uid() = user_id);
+
+CREATE INDEX receipts_user_id_date_idx ON public.receipts(user_id, date DESC);
+```
+
+**Script 2 - Trips tabel aanmaken:**
+```sql
+CREATE TABLE IF NOT EXISTS public.trips (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  description TEXT NOT NULL,
+  start_location TEXT NOT NULL,
+  end_location TEXT NOT NULL,
+  km NUMERIC(8, 2) NOT NULL,
+  cost NUMERIC(10, 2),
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT km_positive CHECK (km > 0),
+  CONSTRAINT cost_positive CHECK (cost IS NULL OR cost > 0)
+);
+
+ALTER TABLE public.trips ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own trips"
+  ON public.trips FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own trips"
+  ON public.trips FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own trips"
+  ON public.trips FOR DELETE
+  USING (auth.uid() = user_id);
+
+CREATE INDEX trips_user_id_date_idx ON public.trips(user_id, date DESC);
+```
+
+**Na het uitvoeren:**
+- Run test op `/test-database` pagina
+- Controleer browser console op errors
+- Verificatie script zal nu receipts/trips kunnen aanmaken
+
+***
+
 ## Recente Updates (21 april 2026)
 
 **Email Reminders Feature Removed:**
@@ -13,16 +114,23 @@ FiscalIQ is een Nederlandse boekhoudwebapp gebouwd door SilentLegend. Het is een
 - Verwijderd: `enableAutoReminders` state, `testReminder()` functie
 - Verwijderd: email reminder UI toggle, Resend dependency
 - Verwijderd: files `lib/email-service.ts`, `lib/reminder-handler.ts`, `app/api/reminders/route.ts`, `supabase/company-settings.sql`
-- `vercel.json` leeggemaaktErrorLogger toegevoegd:
+- `vercel.json` leeggemaakt
+
+**Error Logging Toegevoegd:**
 - Bonnetjes pagina: `console.error()` logs tonen nu werkelijke Supabase foutmeldingen
 - Ritten pagina: `console.error()` logs tonen nu werkelijke Supabase foutmeldingen
 - Klantscore pagina: Auth check en invoice count logging toegevoegd voor debugging
 
-**Database Verification Tool:**
-- Nieuw: `/apps/web/app/test-database` pagina met volledige database verificatie
-- Test: SELECT, INSERT, UPDATE, DELETE operations per tabel
-- Automatische schoonmaak van testrecords na verificatie
+**Database Verificatie Tools:**
+- `/apps/web/app/test-database` pagina met volledige database verificatie
+- Tests: SELECT, INSERT, UPDATE, DELETE operations per tabel
 - RLS policies check geïmplementeerd
+- Fixed test payloads: correct kolom names (kvk niet kvk_number, customer_name niet customer_id)
+
+**PDF Layout Verbeterd:**
+- Klant info nu LINKS (was rechts)
+- ZZP'er/bedrijf info nu RECHTS (was links)
+- KVK en BTW-id zichtbaar voor beide partijen
 
 **Build Status:**
 - Build succeeds zonder errors (✓)
@@ -31,13 +139,13 @@ FiscalIQ is een Nederlandse boekhoudwebapp gebouwd door SilentLegend. Het is een
 ## Volgende Work (Prioriteit)
 
 1. ✅ DONE: Email reminder code verwijderen
-2. ✅ DONE: Error logging toevoegen aan bonnetjes/ritten/klantscore
+2. ✅ DONE: Error logging toevoegen
 3. ✅ DONE: Database verificatie tool maken
-4. TODO: Klantscore feature volledig testen en debuggen indien nodig
-5. TODO: Database volledige integriteitscheck uitvoeren
-6. TODO: context.md updaten met toekomstige features
-7. TODO: ROADMAP.md aanmaken met feature roadmap
-8. TODO: PDF layout verbeteren (ZZP'er info rechts, klant info links)
+4. ✅ DONE: PDF layout verbeteren
+5. 🔴 KRITIEK: SQL scripts uitvoeren in Supabase (receipts & trips tabellen aanmaken)
+6. TODO: Database volledige integriteitscheck na SQL scripts
+7. TODO: Bonnetjes & Ritten features testen
+8. TODO: Klantscore feature volledig debuggen
 
 ***
 

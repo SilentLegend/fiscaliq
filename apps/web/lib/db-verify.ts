@@ -171,14 +171,13 @@ function getTestInsertPayload(tableName: string, userId: string): any {
 ***REMOVED***case 'invoices':
 ***REMOVED***  return {
 ***REMOVED******REMOVED***user_id: userId,
-***REMOVED******REMOVED***customer_id: 'test-customer-' + Math.random(),
 ***REMOVED******REMOVED***customer_name: 'Test Customer ' + Math.random(),
 ***REMOVED******REMOVED***issue_date: baseDate,
 ***REMOVED******REMOVED***due_date: baseDate,
 ***REMOVED******REMOVED***amount_excl: 100,
+***REMOVED******REMOVED***vat_rate: 21,
 ***REMOVED******REMOVED***amount_incl: 121,
 ***REMOVED******REMOVED***status: 'concept',
-***REMOVED******REMOVED***notes: 'Test invoice',
 ***REMOVED***  };
 ***REMOVED***case 'customers':
 ***REMOVED***  return {
@@ -186,7 +185,7 @@ function getTestInsertPayload(tableName: string, userId: string): any {
 ***REMOVED******REMOVED***name: 'Test Customer ' + Math.random(),
 ***REMOVED******REMOVED***email: 'test@example.com',
 ***REMOVED******REMOVED***phone: '0612345678',
-***REMOVED******REMOVED***kvk_number: '12345678',
+***REMOVED******REMOVED***kvk: '12345678',
 ***REMOVED******REMOVED***vat_number: 'NL123456789B01',
 ***REMOVED***  };
 ***REMOVED***case 'receipts':
@@ -209,10 +208,11 @@ function getTestInsertPayload(tableName: string, userId: string): any {
 ***REMOVED***  };
 ***REMOVED***case 'invoice_lines':
 ***REMOVED***  return {
-***REMOVED******REMOVED***invoice_id: 'test-invoice-' + Math.random(),
+***REMOVED******REMOVED***invoice_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
 ***REMOVED******REMOVED***description: 'Test line',
 ***REMOVED******REMOVED***quantity: 1,
 ***REMOVED******REMOVED***unit_price: 100,
+***REMOVED******REMOVED***amount_excl: 100,
 ***REMOVED***  };
 ***REMOVED***default:
 ***REMOVED***  return { user_id: userId };
