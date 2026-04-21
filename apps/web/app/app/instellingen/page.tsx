@@ -31,9 +31,7 @@ export default function InstellingenPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [enableAutoReminders, setEnableAutoReminders] = useState(false);
   const [enableClientScore, setEnableClientScore] = useState(false);
-  const [testingReminder, setTestingReminder] = useState(false);
 
   useEffect(() => {
 ***REMOVED***async function loadSettings() {
@@ -63,10 +61,8 @@ export default function InstellingenPage() {
 ***REMOVED***if (!raw) return;
 ***REMOVED***try {
 ***REMOVED***  const parsed = JSON.parse(raw) as {
-***REMOVED******REMOVED***enableAutoReminders?: boolean;
 ***REMOVED******REMOVED***enableClientScore?: boolean;
 ***REMOVED***  };
-***REMOVED***  setEnableAutoReminders(Boolean(parsed.enableAutoReminders));
 ***REMOVED***  setEnableClientScore(Boolean(parsed.enableClientScore));
 ***REMOVED***} catch {}
   }, []);
@@ -308,31 +304,6 @@ export default function InstellingenPage() {
 ***REMOVED******REMOVED******REMOVED***<div className="rounded-2xl border border-border bg-surface p-3">
 ***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Experimentele features</div>
 ***REMOVED******REMOVED******REMOVED***  <div className="mt-2 space-y-2">
-***REMOVED******REMOVED******REMOVED******REMOVED***<div className="flex items-center justify-between gap-3">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <label className="flex items-center justify-between gap-3 text-xs flex-1">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span>Automatische herinneringen</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<input
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  type="checkbox"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  checked={enableAutoReminders}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***const next = {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  enableAutoReminders: e.target.checked,
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  enableClientScore,
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***};
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***setEnableAutoReminders(next.enableAutoReminders);
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***persistFlags(next);
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  }}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***/>
-***REMOVED******REMOVED******REMOVED******REMOVED***  </label>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <button
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="button"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onClick={testReminder}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***disabled={!enableAutoReminders || testingReminder}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***className="ml-2 rounded-full border border-border px-3 py-1 text-xs text-text hover:bg-surface-offset disabled:cursor-not-allowed disabled:opacity-50"
-***REMOVED******REMOVED******REMOVED******REMOVED***  >
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{testingReminder ? 'Testen…' : 'Test'}
-***REMOVED******REMOVED******REMOVED******REMOVED***  </button>
-***REMOVED******REMOVED******REMOVED******REMOVED***</div>
 ***REMOVED******REMOVED******REMOVED******REMOVED***<label className="flex items-center justify-between gap-3 text-xs">
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <span>Klantscore-tabblad</span>
 ***REMOVED******REMOVED******REMOVED******REMOVED***  <input
@@ -340,7 +311,6 @@ export default function InstellingenPage() {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***checked={enableClientScore}
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => {
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  const next = {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableAutoReminders,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableClientScore: e.target.checked,
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  };
 ***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  setEnableClientScore(next.enableClientScore);
