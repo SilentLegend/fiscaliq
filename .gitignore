@@ -24,6 +24,15 @@ build/
 .env.local
 .env.*.local
 .env.production
+.env.*.example (local only - contains secrets)
+
+# ---- Secrets & credentials ----
+.env.secrets
+*.key
+*.pem
+.auth.json
+supabase/supabase.ts (contains local secrets only)
+supabase/setup-db.ts (contains local secrets only)
 
 # ---- OS & Editor ----
 .DS_Store

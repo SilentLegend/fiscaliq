@@ -1,7 +1,14 @@
+import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://hcuybmrlozknmyijqabp.supabase.co';
-const supabaseKey = 'your-secret-key-here';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hcuybmrlozknmyijqabp.supabase.co';
+const supabaseKey = process.env.SUPABASE_SECRET_KEY || '';
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Missing environment variables!');
+  console.error('Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY in .env.local');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
