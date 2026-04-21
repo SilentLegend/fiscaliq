@@ -14,7 +14,10 @@
 ***REMOVED***"jsx": "preserve",
 ***REMOVED***"incremental": true,
 ***REMOVED***"plugins": [{ "name": "next" }],
-***REMOVED***"baseUrl": "."
+***REMOVED***"baseUrl": ".",
+***REMOVED***"paths": {
+***REMOVED***  "@/*": ["./*"]
+***REMOVED***}
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
