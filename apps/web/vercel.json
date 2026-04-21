@@ -1,13 +1,8 @@
-# Vercel Cron Configuration for FiscalIQ
-# This file configures automatic reminder email jobs
-
-# Run reminder emails every day at 09:00 UTC (11:00 Amsterdam time)
-reminders-daily:
-  path: /api/reminders
-  schedule: '0 9 * * *'
-  
-# Optional: Run every 6 hours for more frequent reminders
-reminders-frequent:
-  path: /api/reminders
-  schedule: '0 */6 * * *'
-  disabled: true
+{
+  "crons": [
+***REMOVED***{
+***REMOVED***  "path": "/api/reminders",
+***REMOVED***  "schedule": "0 9 * * *"
+***REMOVED***}
+  ]
+}
