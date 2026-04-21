@@ -1,7 +1,6 @@
-import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hcuybmrlozknmyijqabp.supabase.co';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SECRET_KEY || '';
 
 if (!supabaseUrl || !supabaseKey) {
