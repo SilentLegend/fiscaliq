@@ -6,26 +6,38 @@ FiscalIQ is een Nederlandse boekhoudwebapp gebouwd door SilentLegend. Het is een
 
 ***
 
-## Recente Updates (20 april 2026)
+## Recente Updates (21 april 2026)
 
-- Factuurformulier: Buitenklik sluit modal + overflow-y-auto voor grote formulieren
-- Input validatie: Autocorrect for names (capitaleFirst) in klanten form
-- WhatsApp share: Verwijderd blob PDF link (vereenvoudigd naar gewone message)
-- Reminder test: Gefixt status check (zoekt nu naar any invoice != 'concept')
-- Klantscore: Gefixt status filtering (toont nu vervallen facturen correct)
-- Settings icoon: Gewijzigd naar groter/beter tandwiel design
-- PDF preview: Error handling toegevoegd in useMemo, dependencies voltooid
-- No more emojis: Verwijderd uit alle berichten
-- Bonnetjes pagina: Compleet functioneel met Supabase backend, categorieën, totalen
-- Ritregistratie pagina: Compleet functioneel, KM-vergoeding berekening (0,19 EUR/km)
-- Navigation: Ritten item toegevoegd met custom trips icon
-- SQL schemas: receipts en trips tabellen met RLS policies aangemaakt
+**Email Reminders Feature Removed:**
+- Email reminder feature volledig verwijderd (gepland voor toekomstige versie)
+- Verwijderd: `enableAutoReminders` state, `testReminder()` functie
+- Verwijderd: email reminder UI toggle, Resend dependency
+- Verwijderd: files `lib/email-service.ts`, `lib/reminder-handler.ts`, `app/api/reminders/route.ts`, `supabase/company-settings.sql`
+- `vercel.json` leeggemaaktErrorLogger toegevoegd:
+- Bonnetjes pagina: `console.error()` logs tonen nu werkelijke Supabase foutmeldingen
+- Ritten pagina: `console.error()` logs tonen nu werkelijke Supabase foutmeldingen
+- Klantscore pagina: Auth check en invoice count logging toegevoegd voor debugging
 
-## Volgende Work
+**Database Verification Tool:**
+- Nieuw: `/apps/web/app/test-database` pagina met volledige database verificatie
+- Test: SELECT, INSERT, UPDATE, DELETE operations per tabel
+- Automatische schoonmaak van testrecords na verificatie
+- RLS policies check geïmplementeerd
 
-1. Database: Voer SQL scripts uit in Supabase (receipts.sql en trips.sql)
-2. Gebruikers testen: Bonnetjes en Ritten features
-3. Feature flags: Eventueel achter flags zetten als deze nog in beta zijn
+**Build Status:**
+- Build succeeds zonder errors (✓)
+- TypeScript path aliases werkend (@/lib imports)
+
+## Volgende Work (Prioriteit)
+
+1. ✅ DONE: Email reminder code verwijderen
+2. ✅ DONE: Error logging toevoegen aan bonnetjes/ritten/klantscore
+3. ✅ DONE: Database verificatie tool maken
+4. TODO: Klantscore feature volledig testen en debuggen indien nodig
+5. TODO: Database volledige integriteitscheck uitvoeren
+6. TODO: context.md updaten met toekomstige features
+7. TODO: ROADMAP.md aanmaken met feature roadmap
+8. TODO: PDF layout verbeteren (ZZP'er info rechts, klant info links)
 
 ***
 
@@ -364,3 +376,61 @@ interface InvoiceForm {
 - Sidebar nav items uitgebreid met:
   - Bonnetjes (icon: bonnetje/receipt)
   - Ritten (icon: route/compass)
+
+***
+
+## Toekomstige Features (Roadmap)
+
+### Phase 1: Email Reminders & Automation
+- **Email herinneringen:** Automatische mails naar klanten voor vervallen facturen
+- **Integratie:** Resend API voor email verzending
+- **Timing:** Dagelijks via Vercel Cron
+- **User preference:** Toggle in instellingen
+
+### Phase 2: Meer Bonnetjes & Ritten Features
+- **Bonnetjes-upload:** Foto/scan van bonnetjes opslaan naar Supabase Storage
+- **OCR optioneel:** Automatisch bedrag/datum uit foto extracten (low priority)
+- **Ritten-categories:** Verschillende soorten ritten (klantbezoek, leverancy, etc.)
+- **Rittenrapport:** CSV export per periode
+
+### Phase 3: Tax Filing & Compliance
+- **ICP-aangifte:** Automatische gegevensvoorbereiding voor belastingaangifte
+- **BTW-aangifte:** BTW-rapportage per kwartaal
+- **JsJu-rapport:** Jaarlijkse inkomstenstellingrapportage
+
+### Phase 4: Payment Integration
+- **iDEAL-betaling:** Directe betaling via iDEAL knop in factuuroverzicht
+- **Automatische status:** Factuur status → "betaald" bij succesvolle payment
+- **Bankkoppeling:** Importeer betalingen van bank (Plaid o.ï.d.)
+
+### Phase 5: API & Automation
+- **REST API:** Programmatisch facturen aanmaken/bijwerken
+- **Webhook support:** Externe systemen kunnnen events ontvangen
+- **Zapier/Make:** Integratie met populaire automation platforms
+- **Auto-invoicing:** POST werktijden/inkomsten → automatische factuur
+
+### Phase 6: Advanced Analytics & Insights
+- **Dashboard-uitbreiding:** Inkomstengrafiek, winstmarge trends
+- **Client insights:** Betaalgedrag analyseren per klant
+- **Tax planning:** Voorstel voor reserveringen/belastingplanning
+- **Export-opties:** PDF/Excel rapporten per periode
+
+### Phase 7: Multi-user & Teams
+- **User management:** Meerdere teamleden toevoegen met rollen
+- **Permission system:** Admin / Accountant / Viewer rollen
+- **Audit log:** Wie heeft wat en wanneer gewijzigd
+
+### Phase 8: Mobile App
+- **React Native app:** iOS & Android versie voor onderweg
+- **Offline-first:** Werkt ook zonder internet (sync wanneer mogelijk)
+- **Notifications:** Push notifications voor vervallen facturen
+
+### Future Low-Priority Ideas
+- **Templates:** Factuursjablonen per klanttype
+- **Tijdregistratie:** Integratie met urenregistratie
+- **Projecten:** Facturen linken aan projecten/contracten
+- **Geldstroom:** Cashflow forecast gebaseerd op vervaldatums
+- **Integrations:** Import klantgegevens uit externe CRM
+- **Custom branding:** Logo en kleuren per account
+
+***

@@ -620,56 +620,69 @@ export default function FacturenPage() {
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***doc.setFontSize(11);
 
-***REMOVED***// Bedrijf linksboven
-***REMOVED***if (companySettings) {
-***REMOVED***  doc.text(companySettings.company_name || '-', leftX, cursorY);
-***REMOVED***  cursorY += 10;
-
-***REMOVED***  if (companySettings.street) {
-***REMOVED******REMOVED***doc.text(companySettings.street, leftX, cursorY);
-***REMOVED******REMOVED***cursorY += 6;
-***REMOVED***  }
-
-***REMOVED***  const companyCityLine = `${companySettings.postal_code ?? ''} ${companySettings.city ?? ''}`.trim();
-***REMOVED***  if (companyCityLine) {
-***REMOVED******REMOVED***doc.text(companyCityLine, leftX, cursorY);
-***REMOVED******REMOVED***cursorY += 6;
-***REMOVED***  }
-
-***REMOVED***  doc.setDrawColor(190);
-***REMOVED***  doc.line(leftX, cursorY, 82, cursorY);
-***REMOVED***}
-
-***REMOVED***// Klant rechtsboven
-***REMOVED***let rightCursorY = 24;
+***REMOVED***// Klant linksboven (was rechts)
+***REMOVED***let leftCursorY = 24;
 ***REMOVED***doc.setFont('helvetica', 'bold');
-***REMOVED***doc.text(customer?.name || inv.customer_name || '-', rightX, rightCursorY);
-***REMOVED***rightCursorY += 8;
+***REMOVED***doc.text(customer?.name || inv.customer_name || '-', leftX, leftCursorY);
+***REMOVED***leftCursorY += 8;
 
 ***REMOVED***doc.setFont('helvetica', 'normal');
 ***REMOVED***if (customer?.street) {
-***REMOVED***  doc.text(customer.street, rightX, rightCursorY);
-***REMOVED***  rightCursorY += 6;
+***REMOVED***  doc.text(customer.street, leftX, leftCursorY);
+***REMOVED***  leftCursorY += 6;
 ***REMOVED***}
 
 ***REMOVED***const customerCityLine = `${customer?.postal_code ?? ''} ${customer?.city ?? ''}`.trim();
 ***REMOVED***if (customerCityLine) {
-***REMOVED***  doc.text(customerCityLine, rightX, rightCursorY);
-***REMOVED***  rightCursorY += 10;
+***REMOVED***  doc.text(customerCityLine, leftX, leftCursorY);
+***REMOVED***  leftCursorY += 10;
 ***REMOVED***}
 
 ***REMOVED***if (customer?.kvk) {
-***REMOVED***  doc.text(`KvK-nummer: ${customer.kvk}`, rightX, rightCursorY);
-***REMOVED***  rightCursorY += 6;
+***REMOVED***  doc.text(`KvK-nummer: ${customer.kvk}`, leftX, leftCursorY);
+***REMOVED***  leftCursorY += 6;
 ***REMOVED***}
 
 ***REMOVED***if (customer?.vat_number) {
-***REMOVED***  doc.text(`BTW-id: ${customer.vat_number}`, rightX, rightCursorY);
-***REMOVED***  rightCursorY += 6;
+***REMOVED***  doc.text(`BTW-id: ${customer.vat_number}`, leftX, leftCursorY);
+***REMOVED***  leftCursorY += 6;
 ***REMOVED***}
 
 ***REMOVED***doc.setDrawColor(190);
-***REMOVED***doc.line(rightX, rightCursorY + 2, contentRight, rightCursorY + 2);
+***REMOVED***doc.line(leftX, leftCursorY + 2, 82, leftCursorY + 2);
+
+***REMOVED***// Bedrijf rechtsboven (was linksboven)
+***REMOVED***let rightCursorY = 24;
+***REMOVED***if (companySettings) {
+***REMOVED***  doc.setFont('helvetica', 'bold');
+***REMOVED***  doc.text(companySettings.company_name || '-', rightX, rightCursorY);
+***REMOVED***  rightCursorY += 8;
+
+***REMOVED***  doc.setFont('helvetica', 'normal');
+***REMOVED***  if (companySettings.street) {
+***REMOVED******REMOVED***doc.text(companySettings.street, rightX, rightCursorY);
+***REMOVED******REMOVED***rightCursorY += 6;
+***REMOVED***  }
+
+***REMOVED***  const companyCityLine = `${companySettings.postal_code ?? ''} ${companySettings.city ?? ''}`.trim();
+***REMOVED***  if (companyCityLine) {
+***REMOVED******REMOVED***doc.text(companyCityLine, rightX, rightCursorY);
+***REMOVED******REMOVED***rightCursorY += 6;
+***REMOVED***  }
+
+***REMOVED***  if (companySettings.kvk) {
+***REMOVED******REMOVED***doc.text(`KvK: ${companySettings.kvk}`, rightX, rightCursorY);
+***REMOVED******REMOVED***rightCursorY += 6;
+***REMOVED***  }
+
+***REMOVED***  if (companySettings.vat_number) {
+***REMOVED******REMOVED***doc.text(`BTW-id: ${companySettings.vat_number}`, rightX, rightCursorY);
+***REMOVED******REMOVED***rightCursorY += 6;
+***REMOVED***  }
+
+***REMOVED***  doc.setDrawColor(190);
+***REMOVED***  doc.line(rightX, rightCursorY + 2, contentRight, rightCursorY + 2);
+***REMOVED***}
 
 ***REMOVED***// Titelblok
 ***REMOVED***cursorY = 92;
