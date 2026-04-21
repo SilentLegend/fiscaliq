@@ -31,16 +31,29 @@ export default function KlantscorePage() {
 
   async function loadScores() {
 ***REMOVED***setLoading(true);
+***REMOVED***
+***REMOVED***// Check if user is authenticated
+***REMOVED***const { data: { user } } = await supabase.auth.getUser();
+***REMOVED***console.log('Auth user:', user?.id);
+***REMOVED***
 ***REMOVED***const { data: invoices, error: invoicesError } = await supabase
 ***REMOVED***  .from('invoices')
 ***REMOVED***  .select('*')
 ***REMOVED***  .order('due_date', { ascending: false });
 
-***REMOVED***if (invoicesError || !invoices) {
+***REMOVED***if (invoicesError) {
 ***REMOVED***  console.error('Error loading invoices:', invoicesError);
 ***REMOVED***  setLoading(false);
 ***REMOVED***  return;
 ***REMOVED***}
+***REMOVED***
+***REMOVED***if (!invoices) {
+***REMOVED***  console.log('No invoices returned');
+***REMOVED***  setLoading(false);
+***REMOVED***  return;
+***REMOVED***}
+***REMOVED***
+***REMOVED***console.log('Loaded invoices:', invoices.length, invoices);
 
 ***REMOVED***const now = new Date();
 ***REMOVED***const customerData: { [key: string]: InvoiceRow[] } = {};

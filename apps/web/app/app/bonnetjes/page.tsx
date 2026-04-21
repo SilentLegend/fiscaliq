@@ -114,7 +114,8 @@ export default function BonnetjesPage() {
 ***REMOVED***  });
 
 ***REMOVED***  if (insertError) {
-***REMOVED******REMOVED***setError('Kon bonnetje niet opslaan.');
+***REMOVED******REMOVED***console.error('Bonnetje insert error:', insertError);
+***REMOVED******REMOVED***setError('Kon bonnetje niet opslaan: ' + (insertError.message || 'Onbekende fout'));
 ***REMOVED***  } else {
 ***REMOVED******REMOVED***setForm({
 ***REMOVED******REMOVED***  date: new Date().toISOString().slice(0, 10),

@@ -104,7 +104,8 @@ export default function RittenPage() {
 ***REMOVED***  });
 
 ***REMOVED***  if (insertError) {
-***REMOVED******REMOVED***setError('Kon rit niet opslaan.');
+***REMOVED******REMOVED***console.error('Trip insert error:', insertError);
+***REMOVED******REMOVED***setError('Kon rit niet opslaan: ' + (insertError.message || 'Onbekende fout'));
 ***REMOVED***  } else {
 ***REMOVED******REMOVED***setForm({
 ***REMOVED******REMOVED***  date: new Date().toISOString().slice(0, 10),
