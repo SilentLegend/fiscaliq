@@ -172,7 +172,7 @@ export async function sendReminderEmail(options: ReminderEmailOptions) {
 ***REMOVED***  to: toEmail,
 ***REMOVED***  subject: `Betalingsherinnering: Factuur #${invoiceNumber}`,
 ***REMOVED***  html: emailHtml,
-***REMOVED***  replyTo: companyEmail,
+***REMOVED***  reply_to: companyEmail,
 ***REMOVED***})
 
 ***REMOVED***return {
