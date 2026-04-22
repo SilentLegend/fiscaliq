@@ -26,175 +26,175 @@ export default function KlantscorePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-***REMOVED***loadScores();
+loadScores();
   }, []);
 
   async function loadScores() {
-***REMOVED***setLoading(true);
-***REMOVED***
-***REMOVED***// Check if user is authenticated
-***REMOVED***const { data: { user } } = await supabase.auth.getUser();
-***REMOVED***console.log('Auth user:', user?.id);
-***REMOVED***
-***REMOVED***const { data: invoices, error: invoicesError } = await supabase
-***REMOVED***  .from('invoices')
-***REMOVED***  .select('*')
-***REMOVED***  .order('due_date', { ascending: false });
+setLoading(true);
 
-***REMOVED***if (invoicesError) {
-***REMOVED***  console.error('Error loading invoices:', invoicesError);
-***REMOVED***  setLoading(false);
-***REMOVED***  return;
-***REMOVED***}
-***REMOVED***
-***REMOVED***if (!invoices) {
-***REMOVED***  console.log('No invoices returned');
-***REMOVED***  setLoading(false);
-***REMOVED***  return;
-***REMOVED***}
-***REMOVED***
-***REMOVED***console.log('Loaded invoices:', invoices.length, invoices);
+// Check if user is authenticated
+const { data: { user } } = await supabase.auth.getUser();
+console.log('Auth user:', user?.id);
 
-***REMOVED***const now = new Date();
-***REMOVED***const customerData: { [key: string]: InvoiceRow[] } = {};
+const { data: invoices, error: invoicesError } = await supabase
+  .from('invoices')
+  .select('*')
+  .order('due_date', { ascending: false });
 
-***REMOVED***(invoices as InvoiceRow[]).forEach((invoice) => {
-***REMOVED***  if (!customerData[invoice.customer_name]) {
-***REMOVED******REMOVED***customerData[invoice.customer_name] = [];
-***REMOVED***  }
-***REMOVED***  customerData[invoice.customer_name].push(invoice);
-***REMOVED***});
+if (invoicesError) {
+  console.error('Error loading invoices:', invoicesError);
+  setLoading(false);
+  return;
+}
 
-***REMOVED***const calculatedScores: CustomerScore[] = Object.entries(customerData).map(
-***REMOVED***  ([customerName, invoices]) => {
-***REMOVED******REMOVED***const openInvoices = invoices.filter((inv) => inv.status !== 'concept');
-***REMOVED******REMOVED***const overdueInvoices = openInvoices.filter((inv) => {
-***REMOVED******REMOVED***  if (!inv.due_date) return false;
-***REMOVED******REMOVED***  const dueDate = new Date(inv.due_date);
-***REMOVED******REMOVED***  return dueDate < now;
-***REMOVED******REMOVED***});
+if (!invoices) {
+  console.log('No invoices returned');
+  setLoading(false);
+  return;
+}
 
-***REMOVED******REMOVED***const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.amount_incl || 0), 0);
-***REMOVED******REMOVED***const daysLate = overdueInvoices
-***REMOVED******REMOVED***  .map((inv) => {
-***REMOVED******REMOVED******REMOVED***const dueDate = new Date(inv.due_date || new Date());
-***REMOVED******REMOVED******REMOVED***const daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-***REMOVED******REMOVED******REMOVED***return Math.max(0, daysOverdue);
-***REMOVED******REMOVED***  });
+console.log('Loaded invoices:', invoices.length, invoices);
 
-***REMOVED******REMOVED***const averageDaysLate =
-***REMOVED******REMOVED***  daysLate.length > 0 ? Math.round(daysLate.reduce((a, b) => a + b, 0) / daysLate.length) : 0;
+const now = new Date();
+const customerData: { [key: string]: InvoiceRow[] } = {};
 
-***REMOVED******REMOVED***// Score: 100 = perfect, lowers based on overdue invoices
-***REMOVED******REMOVED***const overdueRatio = invoices.length > 0 ? overdueInvoices.length / invoices.length : 0;
-***REMOVED******REMOVED***const score = Math.max(0, Math.round(100 - overdueRatio * 40 - averageDaysLate * 0.5));
+(invoices as InvoiceRow[]).forEach((invoice) => {
+  if (!customerData[invoice.customer_name]) {
+customerData[invoice.customer_name] = [];
+  }
+  customerData[invoice.customer_name].push(invoice);
+});
 
-***REMOVED******REMOVED***return {
-***REMOVED******REMOVED***  customerName,
-***REMOVED******REMOVED***  totalInvoices: invoices.length,
-***REMOVED******REMOVED***  overdueInvoices: overdueInvoices.length,
-***REMOVED******REMOVED***  overdueAmount,
-***REMOVED******REMOVED***  averageDaysLate,
-***REMOVED******REMOVED***  score,
-***REMOVED******REMOVED***};
-***REMOVED***  },
-***REMOVED***);
+const calculatedScores: CustomerScore[] = Object.entries(customerData).map(
+  ([customerName, invoices]) => {
+const openInvoices = invoices.filter((inv) => inv.status !== 'concept');
+const overdueInvoices = openInvoices.filter((inv) => {
+  if (!inv.due_date) return false;
+  const dueDate = new Date(inv.due_date);
+  return dueDate < now;
+});
 
-***REMOVED***setScores(calculatedScores.sort((a, b) => b.score - a.score));
-***REMOVED***setLoading(false);
+const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.amount_incl || 0), 0);
+const daysLate = overdueInvoices
+  .map((inv) => {
+const dueDate = new Date(inv.due_date || new Date());
+const daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+return Math.max(0, daysOverdue);
+  });
+
+const averageDaysLate =
+  daysLate.length > 0 ? Math.round(daysLate.reduce((a, b) => a + b, 0) / daysLate.length) : 0;
+
+// Score: 100 = perfect, lowers based on overdue invoices
+const overdueRatio = invoices.length > 0 ? overdueInvoices.length / invoices.length : 0;
+const score = Math.max(0, Math.round(100 - overdueRatio * 40 - averageDaysLate * 0.5));
+
+return {
+  customerName,
+  totalInvoices: invoices.length,
+  overdueInvoices: overdueInvoices.length,
+  overdueAmount,
+  averageDaysLate,
+  score,
+};
+  },
+);
+
+setScores(calculatedScores.sort((a, b) => b.score - a.score));
+setLoading(false);
   }
 
   const scoreColor = (score: number) => {
-***REMOVED***if (score >= 80) return 'text-emerald-600 bg-emerald-50';
-***REMOVED***if (score >= 60) return 'text-yellow-600 bg-yellow-50';
-***REMOVED***return 'text-rose-600 bg-rose-50';
+if (score >= 80) return 'text-emerald-600 bg-emerald-50';
+if (score >= 60) return 'text-yellow-600 bg-yellow-50';
+return 'text-rose-600 bg-rose-50';
   };
 
   return (
-***REMOVED***<div className="space-y-6">
-***REMOVED***  <header>
-***REMOVED******REMOVED***<h1 className="text-lg font-semibold tracking-tight text-text">Klantscore</h1>
-***REMOVED******REMOVED***<p className="mt-1 text-sm text-muted">
-***REMOVED******REMOVED***  Betaalgedrag per klant gebaseerd op verzonden facturen.
-***REMOVED******REMOVED***</p>
-***REMOVED***  </header>
+<div className="space-y-6">
+  <header>
+<h1 className="text-lg font-semibold tracking-tight text-text">Klantscore</h1>
+<p className="mt-1 text-sm text-muted">
+  Betaalgedrag per klant gebaseerd op verzonden facturen.
+</p>
+  </header>
 
-***REMOVED***  {loading ? (
-***REMOVED******REMOVED***<div className="rounded-2xl border border-border bg-surface p-6 text-center text-sm text-muted">
-***REMOVED******REMOVED***  Scores laden...
-***REMOVED******REMOVED***</div>
-***REMOVED***  ) : scores.length === 0 ? (
-***REMOVED******REMOVED***<div className="rounded-2xl border border-border bg-surface p-6 text-center text-sm text-muted">
-***REMOVED******REMOVED***  Geen facturen gevonden. Voeg facturen toe om scores te zien.
-***REMOVED******REMOVED***</div>
-***REMOVED***  ) : (
-***REMOVED******REMOVED***<section className="rounded-2xl border border-border bg-surface overflow-hidden">
-***REMOVED******REMOVED***  <table className="min-w-full text-left text-sm">
-***REMOVED******REMOVED******REMOVED***<thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
-***REMOVED******REMOVED******REMOVED***  <tr>
-***REMOVED******REMOVED******REMOVED******REMOVED***<th className="px-4 py-3">Klant</th>
-***REMOVED******REMOVED******REMOVED******REMOVED***<th className="px-4 py-3 text-center">Totaal facturen</th>
-***REMOVED******REMOVED******REMOVED******REMOVED***<th className="px-4 py-3 text-center">Vervallen</th>
-***REMOVED******REMOVED******REMOVED******REMOVED***<th className="px-4 py-3 text-right">Openstaand bedrag</th>
-***REMOVED******REMOVED******REMOVED******REMOVED***<th className="px-4 py-3 text-center">Gem. dagen te laat</th>
-***REMOVED******REMOVED******REMOVED******REMOVED***<th className="px-4 py-3 text-center">Score</th>
-***REMOVED******REMOVED******REMOVED***  </tr>
-***REMOVED******REMOVED******REMOVED***</thead>
-***REMOVED******REMOVED******REMOVED***<tbody>
-***REMOVED******REMOVED******REMOVED***  {scores.map((score, idx) => (
-***REMOVED******REMOVED******REMOVED******REMOVED***<tr
-***REMOVED******REMOVED******REMOVED******REMOVED***  key={idx}
-***REMOVED******REMOVED******REMOVED******REMOVED***  className="border-t border-border/60 hover:bg-surface-offset/50 transition"
-***REMOVED******REMOVED******REMOVED******REMOVED***>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs font-medium text-text">{score.customerName}</td>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-center text-muted">{score.totalInvoices}</td>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-center">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{score.overdueInvoices > 0 ? (
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="inline-flex rounded-full bg-rose-50 px-2 py-0.5 text-rose-700 font-medium">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{score.overdueInvoices}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***) : (
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-emerald-600">—</span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***)}
-***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-right font-mono text-text">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{score.overdueAmount > 0 ? (
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  <span className="text-rose-600 font-medium">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***€{score.overdueAmount.toFixed(2).replace('.', ',')}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  </span>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***) : (
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  '—'
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***)}
-***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-center text-muted">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***{score.averageDaysLate > 0 ? `${score.averageDaysLate} dagen` : '—'}
-***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <td className="px-4 py-3 text-xs text-center">
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***<span
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  className={`inline-flex rounded-full px-3 py-1 font-semibold ${scoreColor(
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***score.score,
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  )}`}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***>
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  {score.score}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***</span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  </td>
-***REMOVED******REMOVED******REMOVED******REMOVED***</tr>
-***REMOVED******REMOVED******REMOVED***  ))}
-***REMOVED******REMOVED******REMOVED***</tbody>
-***REMOVED******REMOVED***  </table>
-***REMOVED******REMOVED***</section>
-***REMOVED***  )}
+  {loading ? (
+<div className="rounded-2xl border border-border bg-surface p-6 text-center text-sm text-muted">
+  Scores laden...
+</div>
+  ) : scores.length === 0 ? (
+<div className="rounded-2xl border border-border bg-surface p-6 text-center text-sm text-muted">
+  Geen facturen gevonden. Voeg facturen toe om scores te zien.
+</div>
+  ) : (
+<section className="rounded-2xl border border-border bg-surface overflow-hidden">
+  <table className="min-w-full text-left text-sm">
+<thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
+  <tr>
+<th className="px-4 py-3">Klant</th>
+<th className="px-4 py-3 text-center">Totaal facturen</th>
+<th className="px-4 py-3 text-center">Vervallen</th>
+<th className="px-4 py-3 text-right">Openstaand bedrag</th>
+<th className="px-4 py-3 text-center">Gem. dagen te laat</th>
+<th className="px-4 py-3 text-center">Score</th>
+  </tr>
+</thead>
+<tbody>
+  {scores.map((score, idx) => (
+<tr
+  key={idx}
+  className="border-t border-border/60 hover:bg-surface-offset/50 transition"
+>
+  <td className="px-4 py-3 text-xs font-medium text-text">{score.customerName}</td>
+  <td className="px-4 py-3 text-xs text-center text-muted">{score.totalInvoices}</td>
+  <td className="px-4 py-3 text-xs text-center">
+{score.overdueInvoices > 0 ? (
+  <span className="inline-flex rounded-full bg-rose-50 px-2 py-0.5 text-rose-700 font-medium">
+{score.overdueInvoices}
+  </span>
+) : (
+  <span className="text-emerald-600">—</span>
+)}
+  </td>
+  <td className="px-4 py-3 text-xs text-right font-mono text-text">
+{score.overdueAmount > 0 ? (
+  <span className="text-rose-600 font-medium">
+€{score.overdueAmount.toFixed(2).replace('.', ',')}
+  </span>
+) : (
+  '—'
+)}
+  </td>
+  <td className="px-4 py-3 text-xs text-center text-muted">
+{score.averageDaysLate > 0 ? `${score.averageDaysLate} dagen` : '—'}
+  </td>
+  <td className="px-4 py-3 text-xs text-center">
+<span
+  className={`inline-flex rounded-full px-3 py-1 font-semibold ${scoreColor(
+score.score,
+  )}`}
+>
+  {score.score}
+</span>
+  </td>
+</tr>
+  ))}
+</tbody>
+  </table>
+</section>
+  )}
 
-***REMOVED***  <section className="rounded-2xl border border-border bg-surface p-4 text-xs text-muted">
-***REMOVED******REMOVED***<div className="font-medium text-text mb-2">Hoe werkt de klantscore?</div>
-***REMOVED******REMOVED***<ul className="space-y-1 ml-4 list-disc">
-***REMOVED******REMOVED***  <li><strong>Score 80-100:</strong> Betrouwbare klant (weinig tot geen vervallen facturen)</li>
-***REMOVED******REMOVED***  <li><strong>Score 60-79:</strong> Matig betaalprofiel (enkele vervallen facturen)</li>
-***REMOVED******REMOVED***  <li><strong>Score &lt;60:</strong> Riskant betaalprofiel (meerdere vervallen facturen)</li>
-***REMOVED******REMOVED***  <li><strong>Vervallen:</strong> Aantal openstaande facturen voorbij vervaldatum</li>
-***REMOVED******REMOVED***  <li><strong>Gem. dagen te laat:</strong> Gemiddeld aantal dagen dat klant achter staat</li>
-***REMOVED******REMOVED***</ul>
-***REMOVED***  </section>
-***REMOVED***</div>
+  <section className="rounded-2xl border border-border bg-surface p-4 text-xs text-muted">
+<div className="font-medium text-text mb-2">Hoe werkt de klantscore?</div>
+<ul className="space-y-1 ml-4 list-disc">
+  <li><strong>Score 80-100:</strong> Betrouwbare klant (weinig tot geen vervallen facturen)</li>
+  <li><strong>Score 60-79:</strong> Matig betaalprofiel (enkele vervallen facturen)</li>
+  <li><strong>Score &lt;60:</strong> Riskant betaalprofiel (meerdere vervallen facturen)</li>
+  <li><strong>Vervallen:</strong> Aantal openstaande facturen voorbij vervaldatum</li>
+  <li><strong>Gem. dagen te laat:</strong> Gemiddeld aantal dagen dat klant achter staat</li>
+</ul>
+  </section>
+</div>
   );
 }

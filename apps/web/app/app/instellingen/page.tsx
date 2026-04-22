@@ -17,15 +17,15 @@ interface CompanySettings {
 
 export default function InstellingenPage() {
   const [settings, setSettings] = useState<CompanySettings>({
-***REMOVED***company_name: '',
-***REMOVED***street: '',
-***REMOVED***postal_code: '',
-***REMOVED***city: '',
-***REMOVED***kvk: '',
-***REMOVED***vat_number: '',
-***REMOVED***iban: '',
-***REMOVED***email: '',
-***REMOVED***website: '',
+company_name: '',
+street: '',
+postal_code: '',
+city: '',
+kvk: '',
+vat_number: '',
+iban: '',
+email: '',
+website: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -34,259 +34,259 @@ export default function InstellingenPage() {
   const [enableClientScore, setEnableClientScore] = useState(false);
 
   useEffect(() => {
-***REMOVED***async function loadSettings() {
-***REMOVED***  setLoading(true);
-***REMOVED***  const { data, error } = await supabase.from('company_settings').select('*').single();
-***REMOVED***  if (!error && data) {
-***REMOVED******REMOVED***const d = data as any;
-***REMOVED******REMOVED***setSettings({
-***REMOVED******REMOVED***  company_name: d.company_name ?? '',
-***REMOVED******REMOVED***  street: d.street ?? '',
-***REMOVED******REMOVED***  postal_code: d.postal_code ?? '',
-***REMOVED******REMOVED***  city: d.city ?? '',
-***REMOVED******REMOVED***  kvk: d.kvk ?? '',
-***REMOVED******REMOVED***  vat_number: d.vat_number ?? '',
-***REMOVED******REMOVED***  iban: d.iban ?? '',
-***REMOVED******REMOVED***  email: d.email ?? '',
-***REMOVED******REMOVED***  website: d.website ?? '',
-***REMOVED******REMOVED***});
-***REMOVED***  }
-***REMOVED***  setLoading(false);
-***REMOVED***}
-***REMOVED***loadSettings();
+async function loadSettings() {
+  setLoading(true);
+  const { data, error } = await supabase.from('company_settings').select('*').single();
+  if (!error && data) {
+const d = data as any;
+setSettings({
+  company_name: d.company_name ?? '',
+  street: d.street ?? '',
+  postal_code: d.postal_code ?? '',
+  city: d.city ?? '',
+  kvk: d.kvk ?? '',
+  vat_number: d.vat_number ?? '',
+  iban: d.iban ?? '',
+  email: d.email ?? '',
+  website: d.website ?? '',
+});
+  }
+  setLoading(false);
+}
+loadSettings();
   }, []);
 
   useEffect(() => {
-***REMOVED***const raw = localStorage.getItem('fiscaliq.featureFlags.v1');
-***REMOVED***if (!raw) return;
-***REMOVED***try {
-***REMOVED***  const parsed = JSON.parse(raw) as {
-***REMOVED******REMOVED***enableClientScore?: boolean;
-***REMOVED***  };
-***REMOVED***  setEnableClientScore(Boolean(parsed.enableClientScore));
-***REMOVED***} catch {}
+const raw = localStorage.getItem('fiscaliq.featureFlags.v1');
+if (!raw) return;
+try {
+  const parsed = JSON.parse(raw) as {
+enableClientScore?: boolean;
+  };
+  setEnableClientScore(Boolean(parsed.enableClientScore));
+} catch {}
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
-***REMOVED***e.preventDefault();
-***REMOVED***setSaving(true);
-***REMOVED***setError(null);
-***REMOVED***setMessage(null);
+e.preventDefault();
+setSaving(true);
+setError(null);
+setMessage(null);
 
-***REMOVED***try {
-***REMOVED***  const { error } = await supabase.from('company_settings').upsert(settings, {
-***REMOVED******REMOVED***onConflict: 'user_id',
-***REMOVED***  });
-***REMOVED***  if (error) {
-***REMOVED******REMOVED***console.error(error);
-***REMOVED******REMOVED***setError('Kon bedrijfsgegevens niet opslaan.');
-***REMOVED***  } else {
-***REMOVED******REMOVED***setMessage('Bedrijfsgegevens opgeslagen.');
-***REMOVED***  }
-***REMOVED***} catch (err) {
-***REMOVED***  console.error(err);
-***REMOVED***  setError('Er ging iets mis bij het opslaan.');
-***REMOVED***}
+try {
+  const { error } = await supabase.from('company_settings').upsert(settings, {
+onConflict: 'user_id',
+  });
+  if (error) {
+console.error(error);
+setError('Kon bedrijfsgegevens niet opslaan.');
+  } else {
+setMessage('Bedrijfsgegevens opgeslagen.');
+  }
+} catch (err) {
+  console.error(err);
+  setError('Er ging iets mis bij het opslaan.');
+}
 
-***REMOVED***setSaving(false);
+setSaving(false);
   }
 
   function persistFlags(next: { enableClientScore: boolean }) {
-***REMOVED***localStorage.setItem('fiscaliq.featureFlags.v1', JSON.stringify(next));
-***REMOVED***window.dispatchEvent(new StorageEvent('storage', { key: 'fiscaliq.featureFlags.v1' }));
+localStorage.setItem('fiscaliq.featureFlags.v1', JSON.stringify(next));
+window.dispatchEvent(new StorageEvent('storage', { key: 'fiscaliq.featureFlags.v1' }));
   }
 
   return (
-***REMOVED***<div className="space-y-6">
-***REMOVED***  <header>
-***REMOVED******REMOVED***<h1 className="text-3xl font-semibold tracking-tight">Instellingen</h1>
-***REMOVED******REMOVED***<p className="mt-1 text-sm text-muted">Basisinstellingen voor je account en bedrijf.</p>
-***REMOVED***  </header>
+<div className="space-y-6">
+  <header>
+<h1 className="text-3xl font-semibold tracking-tight">Instellingen</h1>
+<p className="mt-1 text-sm text-muted">Basisinstellingen voor je account en bedrijf.</p>
+  </header>
 
-***REMOVED***  <section className="grid gap-6 lg:grid-cols-2">
-***REMOVED******REMOVED***<div className="rounded-3xl border border-border bg-bg p-5">
-***REMOVED******REMOVED***  <h2 className="text-lg font-semibold tracking-tight">Bedrijfsgegevens</h2>
-***REMOVED******REMOVED***  <p className="mt-1 text-xs text-muted">
-***REMOVED******REMOVED******REMOVED***Deze gegevens komen bovenaan je facturen te staan.
-***REMOVED******REMOVED***  </p>
+  <section className="grid gap-6 lg:grid-cols-2">
+<div className="rounded-3xl border border-border bg-bg p-5">
+  <h2 className="text-lg font-semibold tracking-tight">Bedrijfsgegevens</h2>
+  <p className="mt-1 text-xs text-muted">
+Deze gegevens komen bovenaan je facturen te staan.
+  </p>
 
-***REMOVED******REMOVED***  {error && (
-***REMOVED******REMOVED******REMOVED***<div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-***REMOVED******REMOVED******REMOVED***  {error}
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED***  )}
-***REMOVED******REMOVED***  {message && (
-***REMOVED******REMOVED******REMOVED***<div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-***REMOVED******REMOVED******REMOVED***  {message}
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED***  )}
+  {error && (
+<div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+  {error}
+</div>
+  )}
+  {message && (
+<div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+  {message}
+</div>
+  )}
 
-***REMOVED******REMOVED***  <form onSubmit={handleSubmit} className="mt-4 space-y-3 text-xs">
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <label className="font-medium text-text" htmlFor="company_name">
-***REMOVED******REMOVED******REMOVED******REMOVED***Bedrijfsnaam
-***REMOVED******REMOVED******REMOVED***  </label>
-***REMOVED******REMOVED******REMOVED***  <input
-***REMOVED******REMOVED******REMOVED******REMOVED***id="company_name"
-***REMOVED******REMOVED******REMOVED******REMOVED***type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***required
-***REMOVED******REMOVED******REMOVED******REMOVED***value={settings.company_name}
-***REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setSettings((s) => ({ ...s, company_name: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED***  />
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <label className="font-medium text-text" htmlFor="street">
-***REMOVED******REMOVED******REMOVED******REMOVED***Straat + huisnummer
-***REMOVED******REMOVED******REMOVED***  </label>
-***REMOVED******REMOVED******REMOVED***  <input
-***REMOVED******REMOVED******REMOVED******REMOVED***id="street"
-***REMOVED******REMOVED******REMOVED******REMOVED***type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***value={settings.street}
-***REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setSettings((s) => ({ ...s, street: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED***  />
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div className="grid gap-3 md:grid-cols-[1.2fr_2fr]">
-***REMOVED******REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="font-medium text-text" htmlFor="postal_code">
-***REMOVED******REMOVED******REMOVED******REMOVED***  Postcode
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
-***REMOVED******REMOVED******REMOVED******REMOVED***<input
-***REMOVED******REMOVED******REMOVED******REMOVED***  id="postal_code"
-***REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***  value={settings.postal_code}
-***REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setSettings((s) => ({ ...s, postal_code: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED******REMOVED***/>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="font-medium text-text" htmlFor="city">
-***REMOVED******REMOVED******REMOVED******REMOVED***  Plaats
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
-***REMOVED******REMOVED******REMOVED******REMOVED***<input
-***REMOVED******REMOVED******REMOVED******REMOVED***  id="city"
-***REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***  value={settings.city}
-***REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setSettings((s) => ({ ...s, city: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED******REMOVED***/>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div className="grid gap-3 md:grid-cols-2">
-***REMOVED******REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="font-medium text-text" htmlFor="kvk">
-***REMOVED******REMOVED******REMOVED******REMOVED***  KVK-nummer
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
-***REMOVED******REMOVED******REMOVED******REMOVED***<input
-***REMOVED******REMOVED******REMOVED******REMOVED***  id="kvk"
-***REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***  value={settings.kvk}
-***REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setSettings((s) => ({ ...s, kvk: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED******REMOVED***/>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="font-medium text-text" htmlFor="vat_number">
-***REMOVED******REMOVED******REMOVED******REMOVED***  Btw-nummer
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
-***REMOVED******REMOVED******REMOVED******REMOVED***<input
-***REMOVED******REMOVED******REMOVED******REMOVED***  id="vat_number"
-***REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***  value={settings.vat_number}
-***REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setSettings((s) => ({ ...s, vat_number: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED******REMOVED***/>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div className="grid gap-3 md:grid-cols-2">
-***REMOVED******REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="font-medium text-text" htmlFor="iban">
-***REMOVED******REMOVED******REMOVED******REMOVED***  IBAN
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
-***REMOVED******REMOVED******REMOVED******REMOVED***<input
-***REMOVED******REMOVED******REMOVED******REMOVED***  id="iban"
-***REMOVED******REMOVED******REMOVED******REMOVED***  type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***  value={settings.iban}
-***REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setSettings((s) => ({ ...s, iban: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED******REMOVED***/>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***  <div>
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="font-medium text-text" htmlFor="email">
-***REMOVED******REMOVED******REMOVED******REMOVED***  E-mailadres op factuur
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
-***REMOVED******REMOVED******REMOVED******REMOVED***<input
-***REMOVED******REMOVED******REMOVED******REMOVED***  id="email"
-***REMOVED******REMOVED******REMOVED******REMOVED***  type="email"
-***REMOVED******REMOVED******REMOVED******REMOVED***  value={settings.email}
-***REMOVED******REMOVED******REMOVED******REMOVED***  onChange={(e) => setSettings((s) => ({ ...s, email: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED******REMOVED***/>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <label className="font-medium text-text" htmlFor="website">
-***REMOVED******REMOVED******REMOVED******REMOVED***Website (optioneel)
-***REMOVED******REMOVED******REMOVED***  </label>
-***REMOVED******REMOVED******REMOVED***  <input
-***REMOVED******REMOVED******REMOVED******REMOVED***id="website"
-***REMOVED******REMOVED******REMOVED******REMOVED***type="text"
-***REMOVED******REMOVED******REMOVED******REMOVED***value={settings.website}
-***REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => setSettings((s) => ({ ...s, website: e.target.value }))}
-***REMOVED******REMOVED******REMOVED******REMOVED***className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
-***REMOVED******REMOVED******REMOVED***  />
-***REMOVED******REMOVED******REMOVED***</div>
+  <form onSubmit={handleSubmit} className="mt-4 space-y-3 text-xs">
+<div>
+  <label className="font-medium text-text" htmlFor="company_name">
+Bedrijfsnaam
+  </label>
+  <input
+id="company_name"
+type="text"
+required
+value={settings.company_name}
+onChange={(e) => setSettings((s) => ({ ...s, company_name: e.target.value }))}
+className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+  />
+</div>
+<div>
+  <label className="font-medium text-text" htmlFor="street">
+Straat + huisnummer
+  </label>
+  <input
+id="street"
+type="text"
+value={settings.street}
+onChange={(e) => setSettings((s) => ({ ...s, street: e.target.value }))}
+className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+  />
+</div>
+<div className="grid gap-3 md:grid-cols-[1.2fr_2fr]">
+  <div>
+<label className="font-medium text-text" htmlFor="postal_code">
+  Postcode
+</label>
+<input
+  id="postal_code"
+  type="text"
+  value={settings.postal_code}
+  onChange={(e) => setSettings((s) => ({ ...s, postal_code: e.target.value }))}
+  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+/>
+  </div>
+  <div>
+<label className="font-medium text-text" htmlFor="city">
+  Plaats
+</label>
+<input
+  id="city"
+  type="text"
+  value={settings.city}
+  onChange={(e) => setSettings((s) => ({ ...s, city: e.target.value }))}
+  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+/>
+  </div>
+</div>
+<div className="grid gap-3 md:grid-cols-2">
+  <div>
+<label className="font-medium text-text" htmlFor="kvk">
+  KVK-nummer
+</label>
+<input
+  id="kvk"
+  type="text"
+  value={settings.kvk}
+  onChange={(e) => setSettings((s) => ({ ...s, kvk: e.target.value }))}
+  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+/>
+  </div>
+  <div>
+<label className="font-medium text-text" htmlFor="vat_number">
+  Btw-nummer
+</label>
+<input
+  id="vat_number"
+  type="text"
+  value={settings.vat_number}
+  onChange={(e) => setSettings((s) => ({ ...s, vat_number: e.target.value }))}
+  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+/>
+  </div>
+</div>
+<div className="grid gap-3 md:grid-cols-2">
+  <div>
+<label className="font-medium text-text" htmlFor="iban">
+  IBAN
+</label>
+<input
+  id="iban"
+  type="text"
+  value={settings.iban}
+  onChange={(e) => setSettings((s) => ({ ...s, iban: e.target.value }))}
+  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+/>
+  </div>
+  <div>
+<label className="font-medium text-text" htmlFor="email">
+  E-mailadres op factuur
+</label>
+<input
+  id="email"
+  type="email"
+  value={settings.email}
+  onChange={(e) => setSettings((s) => ({ ...s, email: e.target.value }))}
+  className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+/>
+  </div>
+</div>
+<div>
+  <label className="font-medium text-text" htmlFor="website">
+Website (optioneel)
+  </label>
+  <input
+id="website"
+type="text"
+value={settings.website}
+onChange={(e) => setSettings((s) => ({ ...s, website: e.target.value }))}
+className="mt-1 h-9 w-full rounded-2xl border border-border bg-bg px-3 text-xs outline-none transition focus:border-primary"
+  />
+</div>
 
-***REMOVED******REMOVED******REMOVED***<div className="mt-3 flex justify-end">
-***REMOVED******REMOVED******REMOVED***  <button
-***REMOVED******REMOVED******REMOVED******REMOVED***type="submit"
-***REMOVED******REMOVED******REMOVED******REMOVED***disabled={saving || loading}
-***REMOVED******REMOVED******REMOVED******REMOVED***className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white shadow-soft transition hover:bg-primaryDark disabled:cursor-not-allowed disabled:opacity-70"
-***REMOVED******REMOVED******REMOVED***  >
-***REMOVED******REMOVED******REMOVED******REMOVED***{saving ? 'Opslaan…' : 'Opslaan'}
-***REMOVED******REMOVED******REMOVED***  </button>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED***  </form>
-***REMOVED******REMOVED***</div>
+<div className="mt-3 flex justify-end">
+  <button
+type="submit"
+disabled={saving || loading}
+className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white shadow-soft transition hover:bg-primaryDark disabled:cursor-not-allowed disabled:opacity-70"
+  >
+{saving ? 'Opslaan…' : 'Opslaan'}
+  </button>
+</div>
+  </form>
+</div>
 
-***REMOVED******REMOVED***<div className="rounded-3xl border border-border bg-bg p-5">
-***REMOVED******REMOVED***  <h2 className="text-lg font-semibold tracking-tight">Account & abonnement</h2>
-***REMOVED******REMOVED***  <div className="mt-4 space-y-3 text-sm text-muted">
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Account</div>
-***REMOVED******REMOVED******REMOVED***  <div>Naam en e-mailadres komen later via een profielpagina.</div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Abonnement</div>
-***REMOVED******REMOVED******REMOVED***  <div>Fiscaliq alles-in-één — €9,99 per maand na de proefperiode.</div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div>
-***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Support</div>
-***REMOVED******REMOVED******REMOVED***  <div>Vragen? Stuur gerust een e-mail, link volgt later in de app.</div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED******REMOVED***<div className="rounded-2xl border border-border bg-surface p-3">
-***REMOVED******REMOVED******REMOVED***  <div className="font-medium text-text">Experimentele features</div>
-***REMOVED******REMOVED******REMOVED***  <div className="mt-2 space-y-2">
-***REMOVED******REMOVED******REMOVED******REMOVED***<label className="flex items-center justify-between gap-3 text-xs">
-***REMOVED******REMOVED******REMOVED******REMOVED***  <span>Klantscore-tabblad</span>
-***REMOVED******REMOVED******REMOVED******REMOVED***  <input
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***type="checkbox"
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***checked={enableClientScore}
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***onChange={(e) => {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  const next = {
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***enableClientScore: e.target.checked,
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  };
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  setEnableClientScore(next.enableClientScore);
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***  persistFlags(next);
-***REMOVED******REMOVED******REMOVED******REMOVED******REMOVED***}}
-***REMOVED******REMOVED******REMOVED******REMOVED***  />
-***REMOVED******REMOVED******REMOVED******REMOVED***</label>
-***REMOVED******REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED******REMOVED***</div>
-***REMOVED******REMOVED***  </div>
-***REMOVED******REMOVED***</div>
-***REMOVED***  </section>
-***REMOVED***</div>
+<div className="rounded-3xl border border-border bg-bg p-5">
+  <h2 className="text-lg font-semibold tracking-tight">Account & abonnement</h2>
+  <div className="mt-4 space-y-3 text-sm text-muted">
+<div>
+  <div className="font-medium text-text">Account</div>
+  <div>Naam en e-mailadres komen later via een profielpagina.</div>
+</div>
+<div>
+  <div className="font-medium text-text">Abonnement</div>
+  <div>Fiscaliq alles-in-één — €9,99 per maand na de proefperiode.</div>
+</div>
+<div>
+  <div className="font-medium text-text">Support</div>
+  <div>Vragen? Stuur gerust een e-mail, link volgt later in de app.</div>
+</div>
+<div className="rounded-2xl border border-border bg-surface p-3">
+  <div className="font-medium text-text">Experimentele features</div>
+  <div className="mt-2 space-y-2">
+<label className="flex items-center justify-between gap-3 text-xs">
+  <span>Klantscore-tabblad</span>
+  <input
+type="checkbox"
+checked={enableClientScore}
+onChange={(e) => {
+  const next = {
+enableClientScore: e.target.checked,
+  };
+  setEnableClientScore(next.enableClientScore);
+  persistFlags(next);
+}}
+  />
+</label>
+  </div>
+</div>
+  </div>
+</div>
+  </section>
+</div>
   );
 }
