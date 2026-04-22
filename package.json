@@ -1,5 +1,18 @@
 {
-  "dependencies": {
-***REMOVED***"@supabase/supabase-js": "^2.104.0"
+  "name": "fiscaliq",
+  "version": "1.0.0",
+  "description": "Financial management application",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^1.13.4"
   }
 }
