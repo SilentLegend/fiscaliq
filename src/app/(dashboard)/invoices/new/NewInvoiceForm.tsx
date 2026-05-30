@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useCallback } from 'react';
+import { useActionState, useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createInvoice } from '@/lib/actions/invoice.actions';
@@ -24,12 +24,17 @@ export function NewInvoiceForm({ clients }: { clients: Client[] }) {
   const [lineItems, setLineItems] = useState<LineItem[]>([
     { id: '1', description: '', quantity: 1, unitPrice: 0, vatPercentage: DEFAULT_VAT_PERCENTAGE },
   ]);
+  const [dueDateDefault] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().split('T')[0];
+  });
 
-  // Check if we got an invoice ID back (success)
-  if (state.data && typeof state.data === 'string' && state.data.length > 10) {
-    router.push(`/invoices/${state.data}`);
-    return null;
-  }
+  useEffect(() => {
+    if (state.data && typeof state.data === 'string' && state.data.length > 10) {
+      router.push(`/invoices/${state.data}`);
+    }
+  }, [state.data, router]);
 
   const addLineItem = useCallback(() => {
     setLineItems((prev) => [
@@ -157,11 +162,7 @@ export function NewInvoiceForm({ clients }: { clients: Client[] }) {
               type="date"
               required
               className="input-field"
-              defaultValue={
-                new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                  .toISOString()
-                  .split('T')[0]
-              }
+              defaultValue={dueDateDefault}
             />
           </div>
         </div>
