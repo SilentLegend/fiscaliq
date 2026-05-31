@@ -14,7 +14,7 @@ type Props = {
 
 export default function TemplateSelector({ selected, onSelect, previewHeight = 400 }: Props) {
   const [fullPreview, setFullPreview] = useState<TemplateName | null>(null);
-  const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
+  const [version, setVersion] = useState(0);
   const previews = useRef<Record<string, string>>({});
 
   const getPreview = useCallback((t: TemplateName) => {
@@ -26,11 +26,7 @@ export default function TemplateSelector({ selected, onSelect, previewHeight = 4
 
   const refresh = (t: TemplateName) => {
     previews.current[t] = getTemplatePreview(t);
-    const iframe = iframeRefs.current[t];
-    if (iframe) {
-      const blob = new Blob([previews.current[t]], { type: "text/html" });
-      iframe.src = URL.createObjectURL(blob);
-    }
+    setVersion(v => v + 1);
   };
 
   return (
@@ -74,7 +70,7 @@ export default function TemplateSelector({ selected, onSelect, previewHeight = 4
               </div>
               <div className="bg-[#f3f4f6]">
                 <iframe
-                  ref={el => { iframeRefs.current[t] = el; }}
+                  key={`${t}-${version}`}
                   srcDoc={getPreview(t)}
                   className="w-full border-0"
                   style={{ height: previewHeight, pointerEvents: "none" }}
@@ -132,6 +128,7 @@ export default function TemplateSelector({ selected, onSelect, previewHeight = 4
               </div>
               <div className="flex-1 bg-[#f3f4f6] overflow-hidden">
                 <iframe
+                  key={`full-${fullPreview}-${version}`}
                   srcDoc={getPreview(fullPreview)}
                   className="w-full h-full border-0"
                   title={`${templateLabels[fullPreview]} full preview`}
