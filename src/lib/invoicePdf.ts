@@ -153,7 +153,6 @@ function klassiekHtml(invoice: InvoiceData, profile: Profile, client: Client, it
     <div class="mg">
       <div class="mi"><label>Factuurdatum</label><span>${nlDate(invoice.issue_date)}</span></div>
       <div class="mi"><label>Vervaldatum</label><span>${nlDate(invoice.due_date)}</span></div>
-      <div class="mi"><label>Status</label><span>${statusBadge(invoice.status)}</span></div>
     </div>
     <hr>
     <div class="cb">
@@ -230,7 +229,6 @@ function modernHtml(invoice: InvoiceData, profile: Profile, client: Client, item
     <div class="mg">
       <div class="mi"><label>Factuurdatum</label><span>${nlDate(invoice.issue_date)}</span></div>
       <div class="mi"><label>Vervaldatum</label><span>${nlDate(invoice.due_date)}</span></div>
-      <div class="mi"><label>Status</label><span>${statusBadge(invoice.status)}</span></div>
     </div>
     <div class="cb">
       <div class="cl">Factuur voor</div>
@@ -296,7 +294,6 @@ function minimaalHtml(invoice: InvoiceData, profile: Profile, client: Client, it
       <div class="mg">
         <div class="mi"><label>Datum</label><span>${nlDate(invoice.issue_date)}</span></div>
         <div class="mi"><label>Vervalt</label><span>${nlDate(invoice.due_date)}</span></div>
-        <div class="mi"><label>Status</label><span>${statusBadge(invoice.status)}</span></div>
       </div>
     </div>
     <div class="sides">
