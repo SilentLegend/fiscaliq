@@ -22,7 +22,7 @@ export default async function SettingsPage() {
             Standaard factuurinstellingen
           </h2>
           <div className="card max-w-2xl">
-            <SettingsForm settings={settings} />
+            <SettingsForm settings={settings} mode="invoice" />
           </div>
         </section>
 
@@ -35,7 +35,7 @@ export default async function SettingsPage() {
               Deze gegevens worden gebruikt op facturen. Vul ze in zodat je facturen
               voldoen aan de Nederlandse factuurvereisten.
             </p>
-            <SettingsForm settings={settings} />
+            <SettingsForm settings={settings} mode="company" />
           </div>
         </section>
       </div>
