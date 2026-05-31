@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "fiscaliq.vercel.app" }],
+      "destination": "https://www.fiscaliq.nl/$1",
+      "permanent": true
+    }
+  ]
+}
