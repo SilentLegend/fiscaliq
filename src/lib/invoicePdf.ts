@@ -1,7 +1,7 @@
 import html2pdf from "html2pdf.js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type TemplateName = "klassiek" | "modern" | "minimaal";
+export type TemplateName = "klassiek" | "modern" | "minimaal" | "compact" | "kleurrijk";
 
 type InvoiceItem = {
   description: string;
@@ -325,10 +325,162 @@ function minimaalHtml(invoice: InvoiceData, profile: Profile, client: Client, it
   </div></body></html>`;
 }
 
+function compactHtml(invoice: InvoiceData, profile: Profile, client: Client, items: InvoiceItem[], vats: { rate: number; base: number; vat: number }[]): string {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',-apple-system,sans-serif; color:#1a1a1a; font-size:10px; line-height:1.4; }
+    .page { width:210mm; min-height:297mm; padding:28px 36px; position:relative; }
+    .hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; padding-bottom:14px; border-bottom:2px solid #0d4f48; }
+    .brand { font-size:15px; font-weight:700; color:#0d4f48; }
+    .co { text-align:right; font-size:10px; color:#4b5563; line-height:1.5; }
+    .co strong { color:#1a1a1a; font-size:11px; }
+    .row2 { display:flex; justify-content:space-between; margin-bottom:24px; }
+    .info-left { font-size:10px; color:#4b5563; line-height:1.5; }
+    .info-left strong { color:#1a1a1a; font-size:11px; }
+    .info-right { text-align:right; }
+    .ir-label { font-size:8px; text-transform:uppercase; letter-spacing:1px; color:#9ca3af; display:inline; margin-right:8px; }
+    .ir-val { font-size:10px; font-weight:600; }
+    .ir-row { margin-bottom:2px; }
+    table.it { width:100%; border-collapse:collapse; margin-bottom:20px; }
+    table.it thead th { background:#0d4f48; color:#fff; font-size:8px; text-transform:uppercase; letter-spacing:1px; padding:6px 8px; text-align:left; font-weight:500; }
+    table.it thead th:last-child { text-align:right; }
+    table.it thead th:nth-child(3), table.it thead th:nth-child(5) { text-align:center; }
+    table.it thead th:nth-child(4) { text-align:right; }
+    table.it tbody td { padding:5px 8px; border-bottom:1px solid #f3f4f6; font-size:10px; }
+    .tot { margin-left:auto; width:220px; margin-bottom:24px; }
+    .tot table { width:100%; border-collapse:collapse; }
+    .tot td { padding:3px 0; font-size:11px; }
+    .tot td:last-child { text-align:right; font-weight:500; }
+    .tot .gr td { font-size:14px; font-weight:700; color:#0d4f48; border-top:1px solid #0d4f48; padding-top:6px; }
+    .pb { font-size:10px; color:#4b5563; line-height:1.6; margin-bottom:20px; }
+    .pb strong { color:#0d4f48; }
+    .ft { margin-top:28px; padding-top:10px; border-top:1px solid #e5e7eb; font-size:8px; color:#9ca3af; line-height:1.5; }
+  </style></head><body>
+  <div class="page">
+    <div class="hdr">
+      <div class="brand">${profile.company_name || "Fiscaliq"}</div>
+      <div class="co"><strong>${profile.company_name || "Fiscaliq"}</strong><br>
+        ${[profile.address, [profile.postal_code, profile.city].filter(Boolean).join(" ")].filter(Boolean).join("<br>")}
+      </div>
+    </div>
+    <div class="row2">
+      <div class="info-left">
+        <strong>${client.name}</strong><br>
+        ${client.address ? `${client.address}<br>` : ""}
+        ${[client.postal_code, client.city].filter(Boolean).join(" ")}
+        ${client.kvk_number ? `<br>KVK: ${client.kvk_number}` : ""}
+        ${client.vat_number ? `<br>BTW: ${client.vat_number}` : ""}
+      </div>
+      <div class="info-right">
+        <div class="ir-row"><span class="ir-label">Factuur</span><span class="ir-val">${invoice.invoice_number}</span></div>
+        <div class="ir-row"><span class="ir-label">Datum</span><span class="ir-val">${nlDate(invoice.issue_date)}</span></div>
+        <div class="ir-row"><span class="ir-label">Vervalt</span><span class="ir-val">${nlDate(invoice.due_date)}</span></div>
+      </div>
+    </div>
+    <table class="it">
+      <thead><tr><th style="width:24px;">#</th><th>Omschrijving</th><th style="width:48px;text-align:center;">Aantal</th><th style="width:80px;text-align:right;">Prijs</th><th style="width:48px;text-align:center;">BTW</th><th style="width:90px;text-align:right;">Totaal</th></tr></thead>
+      <tbody>${itemsHtml(items)}</tbody>
+    </table>
+    <div class="tot"><table>
+      <tr><td style="color:#6b7280;">Subtotaal</td><td>${eur(invoice.subtotal)}</td></tr>
+      ${vatRows(vats)}
+      <tr class="gr"><td>Totaal</td><td>${eur(invoice.total)}</td></tr>
+    </table></div>
+    ${profile.iban ? `<div class="pb">Betaal naar <strong>${profile.iban}</strong> o.v.v. <strong>${invoice.invoice_number}</strong></div>` : ""}
+    <div class="ft">${profile.company_name || "Fiscaliq"}${profile.email ? ` · ${profile.email}` : ""}${profile.website ? ` · ${profile.website}` : ""} · KVK: ${profile.kvk_number || "—"} · BTW: ${profile.vat_number || "—"} · IBAN: ${profile.iban || "—"}</div>
+  </div></body></html>`;
+}
+
+function kleurrijkHtml(invoice: InvoiceData, profile: Profile, client: Client, items: InvoiceItem[], vats: { rate: number; base: number; vat: number }[]): string {
+  const hasNotes = invoice.notes || profile.invoice_footer;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',-apple-system,sans-serif; color:#1c1917; font-size:12px; line-height:1.5; }
+    .page { width:210mm; min-height:297mm; padding:0; position:relative; }
+    .hero { background:linear-gradient(135deg,#0d4f48 0%,#0a6b5e 100%); padding:36px 48px 28px; color:#fff; }
+    .hero-brand { font-size:20px; font-weight:700; letter-spacing:-0.3px; margin-bottom:24px; }
+    .hero-flex { display:flex; justify-content:space-between; align-items:flex-start; }
+    .hero-title { font-size:32px; font-weight:700; letter-spacing:-0.5px; line-height:1.1; }
+    .hero-sub { font-size:11px; opacity:0.8; margin-top:4px; }
+    .hero-right { text-align:right; font-size:11px; opacity:0.9; line-height:1.5; }
+    .hero-right strong { font-weight:600; }
+    .body-content { padding:32px 48px; }
+    .mg { display:flex; gap:32px; margin-bottom:32px; padding-bottom:20px; border-bottom:2px solid #fbbf24; }
+    .mi label { font-size:9px; text-transform:uppercase; letter-spacing:1.5px; color:#a8a29e; display:block; margin-bottom:2px; }
+    .mi span { font-size:13px; font-weight:500; color:#1c1917; }
+    .cb { margin-bottom:28px; padding:16px 20px; background:#fffbeb; border-left:3px solid #fbbf24; border-radius:0 6px 6px 0; }
+    .cl { font-size:9px; text-transform:uppercase; letter-spacing:1.5px; color:#a8a29e; margin-bottom:4px; }
+    .cn { font-size:16px; font-weight:600; color:#1c1917; margin-bottom:2px; }
+    .cd { font-size:12px; color:#57534e; line-height:1.5; }
+    table.it { width:100%; border-collapse:collapse; margin-bottom:24px; border-radius:6px; overflow:hidden; }
+    table.it thead th { background:#0d4f48; color:#fff; font-size:10px; text-transform:uppercase; letter-spacing:1px; padding:10px 12px; text-align:left; font-weight:500; }
+    table.it thead th:last-child { text-align:right; }
+    table.it thead th:nth-child(3), table.it thead th:nth-child(5) { text-align:center; }
+    table.it thead th:nth-child(4) { text-align:right; }
+    table.it tbody tr:nth-child(even) { background:#fefce8; }
+    table.it tbody td { padding:9px 12px; font-size:13px; border-bottom:1px solid #f5f5f4; }
+    .tot { margin-left:auto; width:280px; margin-bottom:24px; }
+    .tot table { width:100%; border-collapse:collapse; }
+    .tot td { padding:5px 0; font-size:13px; color:#57534e; }
+    .tot td:last-child { text-align:right; font-weight:500; color:#1c1917; }
+    .tot .gr td { font-size:18px; font-weight:700; color:#0d4f48; border-top:2px solid #0d4f48; padding-top:10px; }
+    .pb { background:#fefce8; border:1px solid #fde68a; border-radius:6px; padding:14px 18px; margin-bottom:24px; font-size:12px; line-height:1.6; color:#57534e; }
+    .pb strong { color:#0d4f48; }
+    .ft { padding:20px 48px; background:#f5f5f4; font-size:10px; color:#a8a29e; line-height:1.5; border-top:3px solid #fbbf24; }
+  </style></head><body>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-brand">${profile.company_name || "Fiscaliq"}</div>
+      <div class="hero-flex">
+        <div>
+          <div class="hero-title">${invoice.invoice_number}</div>
+          <div class="hero-sub">Factuur</div>
+        </div>
+        <div class="hero-right">
+          ${profile.address ? `${profile.address}<br>` : ""}
+          ${[profile.postal_code, profile.city].filter(Boolean).join(" ")}
+          ${profile.iban ? `<br>IBAN: ${profile.iban}` : ""}
+        </div>
+      </div>
+    </div>
+    <div class="body-content">
+      <div class="mg">
+        <div class="mi"><label>Factuurdatum</label><span>${nlDate(invoice.issue_date)}</span></div>
+        <div class="mi"><label>Vervaldatum</label><span>${nlDate(invoice.due_date)}</span></div>
+        <div class="mi"><label>KVK</label><span>${profile.kvk_number || "—"}</span></div>
+        <div class="mi"><label>BTW</label><span>${profile.vat_number || "—"}</span></div>
+      </div>
+      <div class="cb">
+        <div class="cl">Factuur voor</div>
+        <div class="cn">${client.name}</div>
+        ${client.address ? `<div class="cd">${client.address}</div>` : ""}
+        <div class="cd">${[client.postal_code, client.city].filter(Boolean).join(" ")}</div>
+        ${client.kvk_number ? `<div class="cd">KVK: ${client.kvk_number}</div>` : ""}
+      </div>
+      <table class="it">
+        <thead><tr><th style="width:36px;">#</th><th>Omschrijving</th><th style="width:60px;text-align:center;">Aantal</th><th style="width:100px;text-align:right;">Prijs</th><th style="width:60px;text-align:center;">BTW</th><th style="width:110px;text-align:right;">Totaal</th></tr></thead>
+        <tbody>${itemsHtml(items)}</tbody>
+      </table>
+      <div class="tot"><table>
+        <tr><td style="color:#6b7280;">Subtotaal</td><td>${eur(invoice.subtotal)}</td></tr>
+        ${vatRows(vats)}
+        <tr class="gr"><td>Totaal</td><td>${eur(invoice.total)}</td></tr>
+      </table></div>
+      ${profile.iban ? `<div class="pb"><strong>Betaalinformatie</strong><br>IBAN: ${profile.iban}<br>o.v.v. <strong>${invoice.invoice_number}</strong></div>` : ""}
+      ${hasNotes ? `<div style="font-size:12px;color:#57534e;line-height:1.6;margin-bottom:24px;">${invoice.notes ? `<p style="margin-bottom:8px;">${invoice.notes.replace(/\n/g, "<br>")}</p>` : ""}${profile.invoice_footer ? `<p style="color:#a8a29e;font-size:11px;">${profile.invoice_footer.replace(/\n/g, "<br>")}</p>` : ""}</div>` : ""}
+    </div>
+    <div class="ft"><strong>${profile.company_name || "Fiscaliq"}</strong>${profile.email ? ` · ${profile.email}` : ""}${profile.website ? ` · ${profile.website}` : ""}${profile.phone ? ` · ${profile.phone}` : ""} · KVK: ${profile.kvk_number || "—"} · BTW: ${profile.vat_number || "—"}</div>
+  </div></body></html>`;
+}
+
 const templates: Record<TemplateName, (invoice: InvoiceData, profile: Profile, client: Client, items: InvoiceItem[], vats: { rate: number; base: number; vat: number }[]) => string> = {
   klassiek: klassiekHtml,
   modern: modernHtml,
   minimaal: minimaalHtml,
+  compact: compactHtml,
+  kleurrijk: kleurrijkHtml,
 };
 
 export function getTemplatePreview(template: TemplateName): string {
@@ -385,4 +537,6 @@ export const templateLabels: Record<TemplateName, string> = {
   klassiek: "Klassiek",
   modern: "Modern",
   minimaal: "Minimaal",
+  compact: "Compact",
+  kleurrijk: "Kleurrijk",
 };

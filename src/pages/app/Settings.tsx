@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import TemplateSelector from "@/components/TemplateSelector";
 import { toast } from "sonner";
-import { Moon, Bell, Building2, Palette, Phone, Globe, Mail } from "lucide-react";
+import { Moon, Bell, Building2, Palette, Phone, Globe, Mail, FileText } from "lucide-react";
+import type { TemplateName } from "@/lib/invoicePdf";
 
 export default function Settings() {
   const { data } = useQuery({
@@ -23,6 +25,9 @@ export default function Settings() {
     try { return JSON.parse(localStorage.getItem("fiscaliq_notifications") ?? "{}"); }
     catch { return {}; }
   });
+  const [invoiceTemplate, setInvoiceTemplate] = useState<TemplateName>(
+    () => (localStorage.getItem("fiscaliq_invoice_template") as TemplateName) || "klassiek"
+  );
 
   const toggleDark = (on: boolean) => {
     document.documentElement.classList.toggle("dark", on);
@@ -128,6 +133,14 @@ export default function Settings() {
             <Button onClick={save}>Opslaan</Button>
           </div>
         </div>
+      </Section>
+
+      <Section icon={FileText} title="Factuur template" description="Kies het ontwerp van je PDF-facturen">
+        <TemplateSelector selected={invoiceTemplate} onSelect={(t) => {
+          setInvoiceTemplate(t);
+          localStorage.setItem("fiscaliq_invoice_template", t);
+          toast.success(`Template "${t}" geselecteerd`);
+        }} previewHeight={350} />
       </Section>
     </div>
   );
