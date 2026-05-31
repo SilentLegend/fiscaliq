@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getInvoiceById } from '@/lib/queries/invoices.queries';
 import { getInvoiceSettings } from '@/lib/queries/settings.queries';
 
-// Dynamic route — no caching
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(
