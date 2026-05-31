@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Users, Receipt, Calculator, Landmark, Settings, LogOut, Map, FileDown } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Receipt, Calculator, Landmark, Settings, LogOut, Map } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -59,12 +59,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-3 space-y-1">
-        <SidebarMenuButton asChild>
-          <NavLink to="/app/pdf-test" className={loc.pathname.startsWith("/app/pdf-test") ? "bg-primary-soft text-primary" : ""}>
-            <FileDown className="h-4 w-4" />
-            {!collapsed && <span>PDF Templates</span>}
-          </NavLink>
-        </SidebarMenuButton>
         <SidebarMenuButton asChild>
           <NavLink to="/app/instellingen" className={loc.pathname.startsWith("/app/instellingen") ? "bg-primary-soft text-primary" : ""}>
             <Settings className="h-4 w-4" />

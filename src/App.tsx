@@ -17,7 +17,6 @@ import Vat from "./pages/app/Vat";
 import Bank from "./pages/app/Bank";
 import Roadmap from "./pages/app/Roadmap";
 import Settings from "./pages/app/Settings";
-import PdfTest from "./pages/app/PdfTest";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -43,7 +42,6 @@ const App = () => (
               <Route path="bank" element={<Bank />} />
               <Route path="roadmap" element={<Roadmap />} />
               <Route path="instellingen" element={<Settings />} />
-              <Route path="pdf-test" element={<PdfTest />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

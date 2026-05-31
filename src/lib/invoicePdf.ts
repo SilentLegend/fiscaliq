@@ -493,8 +493,9 @@ export function getTemplatePreview(template: TemplateName): string {
   ];
   const vats = vatSummary(dummyItems);
   const full = templates[template](dummyInvoice, dummyProfile, dummyClient, dummyItems, vats);
-  const previewCss = `<style>body{background:#d1d5db!important;display:flex!important;justify-content:center!important;padding:24px!important;min-height:100vh!important;}.page{background:#fff!important;box-shadow:0 4px 32px rgba(0,0,0,0.12)!important;margin-top:auto!important;margin-bottom:auto!important;}</style></head>`;
-  return full.replace("</head>", previewCss);
+  const previewCss = `<style>body{background:#d1d5db!important;display:flex!important;justify-content:center!important;padding:24px!important;min-height:100vh!important;overflow:hidden!important;}.page{background:#fff!important;box-shadow:0 4px 32px rgba(0,0,0,0.12)!important;}</style></head>`;
+  const autoFit = `<script>(function(){var p=document.querySelector('.page');if(!p)return;var s=Math.min(1,(window.innerWidth-48)/p.offsetWidth);p.style.transform='scale('+s+')';p.style.transformOrigin='top center';document.body.style.height=(p.offsetHeight*s+48)+'px';})();<\/script></body>`;
+  return full.replace("</head>", previewCss).replace("</body>", autoFit);
 }
 
 export async function downloadInvoicePdf(invoiceId: string): Promise<void> {
