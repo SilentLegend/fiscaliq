@@ -31,10 +31,6 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem("fiscaliq_theme");
-    document.documentElement.classList.remove("dark", "light");
-    if (stored === "dark") document.documentElement.classList.add("dark");
-    else if (stored === "light") document.documentElement.classList.remove("dark");
     setDarkMode(document.documentElement.classList.contains("dark"));
   }, []);
 
