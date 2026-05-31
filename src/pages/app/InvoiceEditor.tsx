@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, ArrowLeft, Save, Download } from "lucide-react";
 import { eur } from "@/lib/format";
+import { downloadInvoicePdf } from "@/lib/invoicePdf";
 import { toast } from "sonner";
 
 type Item = { id?: string; description: string; quantity: number; unit_price: number; vat_rate: number; position: number };
@@ -127,7 +128,12 @@ export default function InvoiceEditor() {
         <Button variant="ghost" onClick={() => nav("/app/facturen")}><ArrowLeft className="h-4 w-4 mr-2" /> Terug</Button>
         <div className="flex items-center gap-2">
           {!isNew && (
-            <Button variant="outline" onClick={() => toast.info("PDF download komt binnenkort beschikbaar")}>
+            <Button variant="outline" onClick={async () => {
+              try {
+                await downloadInvoicePdf(id!);
+                toast.success("PDF gedownload");
+              } catch { toast.error("PDF download mislukt"); }
+            }}>
               <Download className="h-4 w-4 mr-2" /> Download PDF
             </Button>
           )}

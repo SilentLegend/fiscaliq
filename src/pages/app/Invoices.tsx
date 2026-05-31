@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { eur, nlDate } from "@/lib/format";
 import { Plus, FileText, Download, Trash2 } from "lucide-react";
+import { downloadInvoicePdf } from "@/lib/invoicePdf";
 import { toast } from "sonner";
 
 const statusStyle: Record<string, string> = {
@@ -47,9 +48,12 @@ export default function Invoices() {
     }
   };
 
-  const handleDownload = (e: React.MouseEvent) => {
+  const handleDownload = async (e: React.MouseEvent, invoiceId: string) => {
     e.stopPropagation();
-    toast.info("PDF download komt binnenkort beschikbaar");
+    try {
+      await downloadInvoicePdf(invoiceId);
+      toast.success("PDF gedownload");
+    } catch { toast.error("PDF download mislukt"); }
   };
 
   return (
@@ -95,7 +99,7 @@ export default function Invoices() {
                   <td className="p-4 text-right font-medium">{eur(r.total)}</td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={handleDownload} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Download PDF">
+                      <button onClick={(e) => handleDownload(e, r.id as string)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Download PDF">
                         <Download className="h-4 w-4" />
                       </button>
                       <button onClick={(e) => confirmDelete(e, r.id as string, r.invoice_number as string)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Verwijderen">
