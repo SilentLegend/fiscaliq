@@ -493,13 +493,8 @@ export function getTemplatePreview(template: TemplateName): string {
   ];
   const vats = vatSummary(dummyItems);
   const full = templates[template](dummyInvoice, dummyProfile, dummyClient, dummyItems, vats);
-  const bodyMatch = full.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-  const pageContent = bodyMatch ? bodyMatch[1] : full;
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#d1d5db; display:flex; justify-content:center; padding:24px; min-height:100vh; }
-    .paper { background:#fff; box-shadow:0 4px 32px rgba(0,0,0,0.12); }
-  </style></head><body><div class="paper">${pageContent}</div></body></html>`;
+  const previewCss = `<style>body{background:#d1d5db!important;display:flex!important;justify-content:center!important;padding:24px!important;min-height:100vh!important;}.page{background:#fff!important;box-shadow:0 4px 32px rgba(0,0,0,0.12)!important;margin-top:auto!important;margin-bottom:auto!important;}</style></head>`;
+  return full.replace("</head>", previewCss);
 }
 
 export async function downloadInvoicePdf(invoiceId: string): Promise<void> {
