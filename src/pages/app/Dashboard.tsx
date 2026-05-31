@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { eur, nlDate, quarterOf } from "@/lib/format";
 import { ArrowUpRight, Clock, Receipt as ReceiptIcon, Wallet, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
+import DashboardChart from "@/components/DashboardChart";
 
 export default function Dashboard() {
   const today = new Date();
@@ -102,23 +103,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="label-eyebrow">Snelle acties</div>
-          <h2 className="font-serif text-xl mt-1 mb-5">Aan de slag</h2>
-          <div className="space-y-2.5">
-            {[
-              { to: "/app/facturen/nieuw", label: "Nieuwe factuur" },
-              { to: "/app/klanten", label: "Klant toevoegen" },
-              { to: "/app/bonnetjes", label: "Bon uploaden" },
-              { to: "/app/bank", label: "Bank koppelen" },
-            ].map(a => (
-              <Link key={a.to} to={a.to} className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary hover:bg-primary-soft transition-colors group">
-                <span className="text-sm font-medium">{a.label}</span>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-              </Link>
-            ))}
-          </div>
-        </div>
+        <DashboardChart />
       </div>
     </div>
   );

@@ -12,21 +12,59 @@ type Item = {
 
 const items: Item[] = [
   { title: "Dashboard overzicht", description: "Omzet, openstaand, BTW reservering met realtime data", phase: "nu", status: "klaar" },
+  { title: "Dashboard grafiek (instelbaar)", description: "Lijn-/staafgrafiek met week/maand/kwartaal/jaar selector", phase: "nu", status: "klaar" },
   { title: "Facturen beheren", description: "Aanmaken, bewerken, verwijderen en statusbeheer van facturen", phase: "nu", status: "klaar" },
+  { title: "Factuur detail pagina", description: "Aparte detailweergave met download PDF knop", phase: "nu", status: "klaar" },
   { title: "Klantenbeheer", description: "CRUD voor klanten met adres- en contactgegevens", phase: "nu", status: "klaar" },
   { title: "Bonnetjes & uitgaven", description: "Uploaden, categoriseren en BTW-berekening van bonnetjes", phase: "nu", status: "klaar" },
+  { title: "Bonnetjes bewerken", description: "Potlood-knop opent dialog met vooringevulde waarden", phase: "nu", status: "klaar" },
   { title: "BTW-overzicht", description: "Kwartaaloverzicht van verschuldigde en terug te vorderen BTW", phase: "nu", status: "klaar" },
   { title: "Bankkoppeling (demo)", description: "Demo-koppeling met voorbeeldtransacties", phase: "nu", status: "klaar" },
-  { title: "PDF-export facturen", description: "Professionele PDF-facturen genereren met jouw logo", phase: "binnenkort", status: "bezig" },
-  { title: "E-mail facturen verzenden", description: "Facturen direct naar klanten mailen vanuit de app", phase: "binnenkort", status: "gepland" },
-  { title: "Live PSD2 bankkoppeling", description: "Echte bankkoppeling via GoCardless/Tink voor automatische transacties", phase: "binnenkort", status: "gepland" },
-  { title: "Automatisch matchen", description: "Banktransacties automatisch matchen aan facturen en bonnetjes", phase: "later", status: "gepland" },
-  { title: "Btw-aangifte export", description: "Exporteer btw-overzicht naar XML voor aangifte bij de Belastingdienst", phase: "later", status: "idee" },
-  { title: "Meerdere btw-tarieven per regel", description: "Ondersteuning voor gemengde btw-tarieven op één factuur", phase: "later", status: "idee" },
-  { title: "Dashboard grafieken", description: "Visuele grafieken voor omzetontwikkeling en uitgavenpatronen", phase: "later", status: "idee" },
-  { title: "Jaaroverzicht", description: "Jaarcijfers export voor de belastingaangifte", phase: "idee", status: "idee" },
-  { title: "Offerte module", description: "Offertes maken en omzetten naar facturen", phase: "idee", status: "idee" },
-  { title: "Mobiele app", description: "Native mobiele app voor bonnetjes scannen onderweg", phase: "idee", status: "idee" },
+  { title: "Roadmap-pagina", description: "Hardcoded roadmap met fases nu/binnenkort/later/idee", phase: "nu", status: "klaar" },
+  { title: "Instellingen (weergave + notificaties)", description: "Dark mode toggle, notificatie voorkeuren (localStorage)", phase: "nu", status: "klaar" },
+  { title: "Instellingen (bedrijfsgegevens)", description: "Telefoon, website, email, standaard BTW, betalingscondities, voettekst", phase: "nu", status: "klaar" },
+  { title: "Dynamische begroeting", description: "Goedemorgen/Goedemiddag/Goedenavond op dashboard", phase: "nu", status: "klaar" },
+  { title: "Dark mode persistent", description: "Inline script in index.html, geen flash bij reload", phase: "nu", status: "klaar" },
+  { title: "Volledige regel klikbaar", description: "Hele rij in facturenlijst navigeert naar detail", phase: "nu", status: "klaar" },
+  { title: "Verwijder knop met confirm", description: "Confirm + verwijder uit DB met toast feedback", phase: "nu", status: "klaar" },
+  { title: "PDF-export facturen", description: "Professionele PDF-facturen genereren met al je gegevens", phase: "binnenkort", status: "bezig" },
+  { title: "E-mail facturen verzenden", description: "Facturen direct naar klanten mailen via Resend", phase: "binnenkort", status: "gepland" },
+  { title: "BTW-aangifte export (XML)", description: "XML voor upload naar Belastingdienst", phase: "binnenkort", status: "gepland" },
+  { title: "Jaaroverzicht / boekhouder export", description: "CSV + ZIP met alle PDFs voor de boekhouder", phase: "binnenkort", status: "gepland" },
+  { title: "Save-before-leave editor", description: "Waarschuwing bij verlaten van factuureditor met onbewaarde wijzigingen", phase: "binnenkort", status: "gepland" },
+  { title: "Lettertypes correct laden", description: "Google Fonts (Fraunces/Inter) fix voor productie", phase: "binnenkort", status: "gepland" },
+  { title: "Live PSD2 bankkoppeling", description: "Echte bankkoppeling via GoCardless requisition flow", phase: "binnenkort", status: "gepland" },
+  { title: "Betaallink op facturen", description: "Mollie/Stripe betaalknop in factuurmail", phase: "later", status: "gepland" },
+  { title: "Automatische herinneringen", description: "Cronjob edge function voor openstaande facturen", phase: "later", status: "gepland" },
+  { title: "Recurring/abonnement facturen", description: "Maandelijkse automatische herhalingsfacturen", phase: "later", status: "gepland" },
+  { title: "Auto-matching bank transacties", description: "Op IBAN + bedrag + referentie matchen aan facturen", phase: "later", status: "gepland" },
+  { title: "Zoeken/filteren op tabellen", description: "Inline search voor facturen, klanten en bonnetjes", phase: "later", status: "idee" },
+  { title: "Pagination op lijsten", description: "Server-side pagination i.p.v. alles in één keer laden", phase: "later", status: "idee" },
+  { title: "Loading skeletons", description: "Vervang 'Laden…' tekst door nette skeletons", phase: "later", status: "idee" },
+  { title: "AlertDialog i.p.v. confirm()", description: "shadcn AlertDialog voor delete confirmaties", phase: "later", status: "idee" },
+  { title: "Wachtwoord vergeten flow", description: "Password reset op auth-pagina", phase: "later", status: "idee" },
+  { title: "Client detail pagina", description: "Aparte pagina met klantgegevens, facturen en score", phase: "later", status: "idee" },
+  { title: "Batch acties facturen", description: "Selecteer meerdere facturen → bulk status wijzigen", phase: "later", status: "idee" },
+  { title: "Status betaald direct vanuit lijst", description: "Inline markeren zonder editor te openen", phase: "later", status: "idee" },
+  { title: "Zoekbare klant-selector", description: "Command/combobox i.p.v. native select", phase: "later", status: "idee" },
+  { title: "Dashboard perioden-vergelijking", description: "+12% vs vorige maand bij KPI-kaarten", phase: "later", status: "idee" },
+  { title: "Openstaande facturen herinnering", description: "Waarschuwing op dashboard bij vervallen facturen", phase: "later", status: "idee" },
+  { title: "Meerdere BTW-tarieven per regel", description: "Gemengde BTW-tarieven op één factuur (dispatch rule)", phase: "later", status: "idee" },
+  { title: "Korting op factuurregels", description: "Regelkorting of totaalkorting op factuur", phase: "idee", status: "idee" },
+  { title: "Factuur kopiëren/dupliceren", description: "Snelle herhaling voor vaste klanten", phase: "idee", status: "idee" },
+  { title: "Bedrijfslogo upload", description: "Eigen logo voor PDF-facturen", phase: "idee", status: "idee" },
+  { title: "Notificatie voorkeuren naar DB", description: "Sync over meerdere apparaten", phase: "idee", status: "idee" },
+  { title: "Route-level code splitting", description: "React.lazy per route voor snellere laadtijd", phase: "idee", status: "idee" },
+  { title: "Klantportaal", description: "Klant kan factuur online inzien + betalen", phase: "idee", status: "idee" },
+  { title: "Tijdregistratie → factuur", description: "Uren schrijven en in één klik omzetten naar factuur", phase: "idee", status: "idee" },
+  { title: "Offertes maken", description: "Offertes met conversie naar factuur", phase: "idee", status: "idee" },
+  { title: "Grafiek BTW (verschuldigd vs aftrekbaar)", description: "Extra lijn in dashboard chart", phase: "idee", status: "idee" },
+  { title: "PWA (installeerbaar)", description: "Mobile-first met offline support", phase: "idee", status: "idee" },
+  { title: "OCR bonnetjes", description: "Automatisch leverancier/bedrag uit foto herkennen", phase: "idee", status: "idee" },
+  { title: "Error boundaries", description: "Per-feature error catching in plaats van witte scherm", phase: "idee", status: "idee" },
+  { title: "Multi-user (boekhouder)", description: "Boekhouder kan meekijken in de administratie", phase: "idee", status: "idee" },
+  { title: "API + Zapier integratie", description: "Externe connecties en automatiseringen", phase: "idee", status: "idee" },
+  { title: "Mobiele app (native)", description: "Bonnetjes scannen onderweg via native app", phase: "idee", status: "idee" },
 ];
 
 const phases: { key: Phase; label: string; sub: string }[] = [
@@ -68,7 +106,7 @@ export default function Roadmap() {
         <p className="text-muted-foreground mt-1">Fiscaliq — wat er is geweest, komt en op de planning staat.</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-4 gap-5">
         <div className="stat-card">
           <div className="label-eyebrow">Voortgang</div>
           <div className="font-serif text-3xl mt-3">{progress}%</div>
@@ -86,6 +124,11 @@ export default function Roadmap() {
           <div className="label-eyebrow">Backlog</div>
           <div className="font-serif text-3xl mt-3">{items.filter(i => i.phase === "idee").length}</div>
           <div className="text-xs text-muted-foreground mt-2">ideeën voor de toekomst</div>
+        </div>
+        <div className="stat-card">
+          <div className="label-eyebrow">Gepland</div>
+          <div className="font-serif text-3xl mt-3">{items.filter(i => i.status === "gepland").length}</div>
+          <div className="text-xs text-muted-foreground mt-2">features klaar om te bouwen</div>
         </div>
       </div>
 
