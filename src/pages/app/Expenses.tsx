@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, Upload, Receipt as ReceiptIcon, Paperclip } from "lucide-react";
+import { Plus, Trash2, Upload, Receipt as ReceiptIcon, Paperclip, Pencil } from "lucide-react";
 import { eur, nlDate } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ const categories = ["Kantoorbenodigdheden", "Software & abonnementen", "Reiskost
 export default function Expenses() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [supplier, setSupplier] = useState("");
   const [amount, setAmount] = useState("");
@@ -34,7 +35,18 @@ export default function Expenses() {
     incl: acc.incl + Number(e.amount), vat: acc.vat + Number(e.vat_amount),
   }), { excl: 0, incl: 0, vat: 0 });
 
-  const reset = () => { setDate(new Date().toISOString().slice(0, 10)); setSupplier(""); setAmount(""); setVatRate("21"); setCategory(categories[0]); setDescription(""); setFile(null); };
+  const reset = () => { setEditId(null); setDate(new Date().toISOString().slice(0, 10)); setSupplier(""); setAmount(""); setVatRate("21"); setCategory(categories[0]); setDescription(""); setFile(null); };
+  const startEdit = (e: Record<string, unknown>) => {
+    setEditId(e.id as string);
+    setDate((e.expense_date as string).slice(0, 10));
+    setSupplier(e.supplier as string);
+    setAmount(String(Number(e.amount)));
+    setVatRate(String(Number(e.vat_rate)));
+    setCategory(e.category as string);
+    setDescription((e.description as string) ?? "");
+    setFile(null);
+    setOpen(true);
+  };
 
   const save = async () => {
     if (!supplier || !amount) return toast.error("Vul leverancier en bedrag in");
@@ -52,14 +64,22 @@ export default function Expenses() {
         if (upErr) throw upErr;
         receiptUrl = path;
       }
-      const { error } = await supabase.from("expenses").insert({
+      const payload = {
         user_id: user.id, expense_date: date, supplier, description,
-        category, amount: total, vat_amount: vatAmount, vat_rate: rate, receipt_url: receiptUrl,
-      });
-      if (error) throw error;
-      toast.success("Bonnetje toegevoegd");
+        category, amount: total, vat_amount: vatAmount, vat_rate: rate,
+        ...(receiptUrl ? { receipt_url: receiptUrl } : {}),
+      };
+      if (editId) {
+        const { error } = await supabase.from("expenses").update(payload).eq("id", editId);
+        if (error) throw error;
+        toast.success("Bonnetje bijgewerkt");
+      } else {
+        const { error } = await supabase.from("expenses").insert(payload);
+        if (error) throw error;
+        toast.success("Bonnetje toegevoegd");
+      }
       qc.invalidateQueries({ queryKey: ["expenses"] });
-      setOpen(false); reset();
+      setOpen(false); setEditId(null); reset();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Er ging iets mis"); } finally { setSaving(false); }
   };
 
@@ -82,9 +102,9 @@ export default function Expenses() {
           <h1 className="font-serif text-3xl mt-2">Bonnetjes</h1>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1.5" /> Bon toevoegen</Button></DialogTrigger>
+          <DialogTrigger asChild><Button onClick={() => { setEditId(null); reset(); }}><Plus className="h-4 w-4 mr-1.5" /> Bon toevoegen</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="font-serif text-2xl">Nieuwe uitgave</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-serif text-2xl">{editId ? "Uitgave bewerken" : "Nieuwe uitgave"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5"><Label>Datum</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
@@ -158,7 +178,16 @@ export default function Expenses() {
                     <td className="p-4 text-muted-foreground hidden md:table-cell">{e.category ?? "—"}</td>
                     <td className="p-4 text-right text-muted-foreground">{eur(e.vat_amount)}</td>
                     <td className="p-4 text-right font-medium">{eur(e.amount)}</td>
-                    <td className="p-4 text-right"><Button variant="ghost" size="icon" onClick={() => remove(e.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => startEdit(e)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Bewerken">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => remove(e.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Verwijderen">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

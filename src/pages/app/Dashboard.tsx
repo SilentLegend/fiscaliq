@@ -8,6 +8,7 @@ export default function Dashboard() {
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
   const qStart = new Date(today.getFullYear(), (quarterOf(today) - 1) * 3, 1).toISOString().slice(0, 10);
+  const greeting = today.getHours() < 12 ? "Goedemorgen" : today.getHours() < 18 ? "Goedemiddag" : "Goedenavond";
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
@@ -51,7 +52,7 @@ export default function Dashboard() {
     <div className="space-y-10">
       <div>
         <div className="label-eyebrow">Vandaag · {nlDate(today)}</div>
-        <h1 className="font-serif text-3xl md:text-4xl mt-2">Goedemorgen 👋</h1>
+        <h1 className="font-serif text-3xl md:text-4xl mt-2">{greeting}</h1>
         <p className="text-muted-foreground mt-1">Een rustig overzicht van je administratie.</p>
       </div>
 

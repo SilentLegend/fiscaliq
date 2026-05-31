@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, ArrowLeft, Save } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Save, Download } from "lucide-react";
 import { eur } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -125,7 +125,14 @@ export default function InvoiceEditor() {
     <div className="space-y-8 max-w-4xl">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => nav("/app/facturen")}><ArrowLeft className="h-4 w-4 mr-2" /> Terug</Button>
-        <Button onClick={save} disabled={saving}><Save className="h-4 w-4 mr-2" /> {saving ? "Opslaan…" : "Opslaan"}</Button>
+        <div className="flex items-center gap-2">
+          {!isNew && (
+            <Button variant="outline" onClick={() => toast.info("PDF download komt binnenkort beschikbaar")}>
+              <Download className="h-4 w-4 mr-2" /> Download PDF
+            </Button>
+          )}
+          <Button onClick={save} disabled={saving}><Save className="h-4 w-4 mr-2" /> {saving ? "Opslaan…" : "Opslaan"}</Button>
+        </div>
       </div>
 
       <div>
