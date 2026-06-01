@@ -106,13 +106,32 @@ Deno.serve(async (req) => {
 
     const { action, ...params } = await req.json();
 
+    const jwt = await createJwt(APP_ID, PRIVATE_KEY);
+
     if (action === "status") {
-      return new Response(JSON.stringify({ ok: true, configured: true }), {
+      const appRes = await ebFetch("/application", jwt);
+      const appData = await appRes.json();
+      return new Response(JSON.stringify({ ok: true, app: appData }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const jwt = await createJwt(APP_ID, PRIVATE_KEY);
+    if (action === "test") {
+      const aspspRes = await ebFetch(`/aspsps?country=NL`, jwt);
+      const aspspData = await aspspRes.json();
+      const aspsps = aspspData?.aspsps || aspspData || [];
+      const knab = Array.isArray(aspsps) ? aspsps.find(
+        (a: Record<string, unknown>) => (a.name as string || "").toLowerCase().includes("knab"),
+      ) : null;
+      return new Response(JSON.stringify({
+        ok: true,
+        jwt_works: aspspRes.ok,
+        knab_aspsp: knab || null,
+        aspsp_count: Array.isArray(aspsps) ? aspsps.length : 0,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "aspsps") {
       const country = params.country || "NL";
@@ -134,13 +153,22 @@ Deno.serve(async (req) => {
 
       const state = crypto.randomUUID();
 
+      // Zoek de juiste ASPSP naam op bij Enable Banking
+      const aspspRes = await ebFetch(`/aspsps?country=${encodeURIComponent(params.aspsp_country || "NL")}`, jwt);
+      const aspspData = await aspspRes.json();
+      const aspsps = aspspData?.aspsps || aspspData || [];
+      const aspsp = Array.isArray(aspsps) ? aspsps.find(
+        (a: Record<string, unknown>) =>
+          (a.name as string || "").toLowerCase().includes((params.aspsp_name || "").toLowerCase()),
+      ) : null;
+      const aspspName = aspsp?.name as string || params.aspsp_name;
+
       const body = {
         access: { valid_until: new Date(Date.now() + 90 * 86400000).toISOString() },
-        aspsp: { name: params.aspsp_name, country: params.aspsp_country || "NL" },
+        aspsp: { name: aspspName, country: params.aspsp_country || "NL" },
         state,
         redirect_url: CALLBACK_URL,
         psu_type: psuType,
-        psu_id: user.id,
       };
 
       const res = await ebFetch("/auth", jwt, {
@@ -149,7 +177,7 @@ Deno.serve(async (req) => {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error_description || data.detail || "Fout bij starten authorisatie");
+      if (!res.ok) throw new Error(JSON.stringify({ eb_error: data, aspsp_used: aspspName }));
 
       // Sla de state + authorization_id op voor de callback
       await supabase.from("bank_connections").insert({
@@ -183,6 +211,7 @@ Deno.serve(async (req) => {
         .eq("provider_requisition_id", state)
         .limit(1);
 
+      // Probeer sessie aan te maken
       const res = await ebFetch("/sessions", jwt, {
         method: "POST",
         body: JSON.stringify({ code }),
@@ -193,6 +222,22 @@ Deno.serve(async (req) => {
 
       const sessionId = data.session_id;
       const accounts = data.accounts || [];
+
+      // Als sessie geen accounts geeft, probeer via /application
+      if (accounts.length === 0) {
+        const appRes = await ebFetch("/application", jwt);
+        if (appRes.ok) {
+          const appData = await appRes.json();
+          const linked = appData.accounts || appData.linked_accounts || [];
+          for (const a of linked) {
+            accounts.push({
+              uid: a.uid || a.id,
+              account_id: { iban: a.account_id?.iban || a.iban || "" },
+              name: a.name || "",
+            });
+          }
+        }
+      }
 
       const connectionId = connections?.[0]?.id;
 
@@ -239,6 +284,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "debug") {
+      const appRes = await ebFetch("/application", jwt);
+      const appData = await appRes.json();
+      return new Response(JSON.stringify({ ok: true, app: appData }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "sync") {
       const { connection_id } = params;
       if (!connection_id) throw new Error("Geen connection_id");
@@ -255,14 +308,29 @@ Deno.serve(async (req) => {
 
       const sessionId = conn.provider_institution_id;
 
-      // Sessie info ophalen → accounts
+      // Probeer via sessie
       const sessRes = await ebFetch(`/sessions/${sessionId}`, jwt);
-      const sessData = await sessRes.json();
-      if (!sessRes.ok) throw new Error("Sessie niet meer geldig — koppel opnieuw");
+      let accountUids: string[] = [];
 
-      const accountUids = (sessData.accounts_data || []).map(
-        (a: Record<string, unknown>) => a.uid,
-      );
+      if (sessRes.ok) {
+        const sessData = await sessRes.json();
+        accountUids = (sessData.accounts_data || []).map(
+          (a: Record<string, unknown>) => a.uid,
+        );
+        if (sessData.accounts) {
+          accountUids = [...new Set([...accountUids, ...(sessData.accounts as string[])])];
+        }
+      }
+
+      // Als sessie geen accounts geeft, probeer via /application (restricted mode)
+      if (accountUids.length === 0) {
+        const appRes = await ebFetch("/application", jwt);
+        if (appRes.ok) {
+          const appData = await appRes.json();
+          const linked = appData.accounts || appData.linked_accounts || [];
+          accountUids = linked.map((a: Record<string, unknown>) => a.uid || a.id).filter(Boolean);
+        }
+      }
 
       let totalFetched = 0;
 
