@@ -59,14 +59,13 @@ export default function Invoices() {
 
   const handleSend = async (e: React.MouseEvent, invoiceId: string) => {
     e.stopPropagation();
-    const promise = sendInvoiceEmail(invoiceId);
-    toast.promise(promise, {
-      loading: "E-mail verzenden…",
-      success: (res) => res.message,
-      error: (err) => err?.message || "Versturen mislukt",
-    });
-    const res = await promise;
-    if (res.ok) queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    try {
+      const msg = await sendInvoiceEmail(invoiceId);
+      toast.success(msg);
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Versturen mislukt");
+    }
   };
 
   return (

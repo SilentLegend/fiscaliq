@@ -131,14 +131,13 @@ export default function InvoiceEditor() {
           {!isNew && (
             <>
               <Button variant="outline" onClick={async () => {
-                const promise = sendInvoiceEmail(id!);
-                toast.promise(promise, {
-                  loading: "E-mail verzenden…",
-                  success: (res) => res.message,
-                  error: (err) => err?.message || "Versturen mislukt",
-                });
-                const res = await promise;
-                if (res.ok) qc.invalidateQueries({ queryKey: ["invoices"] });
+                try {
+                  const msg = await sendInvoiceEmail(id!);
+                  toast.success(msg);
+                  qc.invalidateQueries({ queryKey: ["invoices"] });
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Versturen mislukt");
+                }
               }}>
                 <Send className="h-4 w-4 mr-2" /> Versturen
               </Button>
