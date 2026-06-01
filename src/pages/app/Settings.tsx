@@ -46,7 +46,10 @@ export default function Settings() {
   };
 
   const save = async () => {
-    const { error } = await supabase.from("profiles").update({
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return toast.error("Niet ingelogd");
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id, email: user.email,
       company_name: form.company_name, kvk_number: form.kvk_number,
       vat_number: form.vat_number, address: form.address,
       postal_code: form.postal_code, city: form.city, iban: form.iban,
@@ -54,7 +57,7 @@ export default function Settings() {
       default_vat_rate: form.default_vat_rate ?? 21,
       payment_terms: form.payment_terms ?? 14,
       invoice_footer: form.invoice_footer,
-    }).eq("id", form.id);
+    });
     if (error) return toast.error(error.message);
     toast.success("Bedrijfsgegevens opgeslagen");
   };

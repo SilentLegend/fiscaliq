@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { eur, nlDate } from "@/lib/format";
-import { Plus, FileText, Download, Trash2 } from "lucide-react";
+import { Plus, FileText, Download, Trash2, Send } from "lucide-react";
 import { downloadInvoicePdf } from "@/lib/invoicePdf";
+import { sendInvoiceEmail } from "@/lib/sendInvoiceEmail";
 import { toast } from "sonner";
 
 const statusStyle: Record<string, string> = {
@@ -56,6 +57,18 @@ export default function Invoices() {
     } catch { toast.error("PDF download mislukt"); }
   };
 
+  const handleSend = async (e: React.MouseEvent, invoiceId: string) => {
+    e.stopPropagation();
+    const promise = sendInvoiceEmail(invoiceId);
+    toast.promise(promise, {
+      loading: "E-mail verzenden…",
+      success: (res) => res.message,
+      error: (err) => err?.message || "Versturen mislukt",
+    });
+    const res = await promise;
+    if (res.ok) queryClient.invalidateQueries({ queryKey: ["invoices"] });
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-end justify-between">
@@ -99,6 +112,9 @@ export default function Invoices() {
                   <td className="p-4 text-right font-medium">{eur(r.total)}</td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <button onClick={(e) => handleSend(e, r.id as string)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Verstuur per e-mail">
+                        <Send className="h-4 w-4" />
+                      </button>
                       <button onClick={(e) => handleDownload(e, r.id as string)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Download PDF">
                         <Download className="h-4 w-4" />
                       </button>
