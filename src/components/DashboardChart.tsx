@@ -198,18 +198,23 @@ export default function DashboardChart() {
 
   return (
     <div className="stat-card">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <h2 className="font-serif text-xl">Omzet &amp; uitgaven</h2>
-        <Select value={period} onValueChange={(v: Period) => setPeriod(v)}>
-          <SelectTrigger className="w-[130px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {periodOptions.map(opt => (
-              <SelectItem key={opt.key} value={opt.key}>{opt.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-1 mt-3">
+          {periodOptions.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setPeriod(opt.key)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                period === opt.key
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isLoading ? (
