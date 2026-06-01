@@ -4,6 +4,13 @@ import { useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Period = "week" | "maand" | "kwartaal" | "jaar";
 
@@ -191,26 +198,18 @@ export default function DashboardChart() {
 
   return (
     <div className="stat-card">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-        <div>
-          <div className="label-eyebrow">Grafiek</div>
-          <h2 className="font-serif text-xl mt-1">Omzet &amp; uitgaven</h2>
-        </div>
-        <div className="flex gap-1">
-          {periodOptions.map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setPeriod(opt.key)}
-              className={`px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                period === opt.key
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-serif text-xl">Omzet &amp; uitgaven</h2>
+        <Select value={period} onValueChange={(v: Period) => setPeriod(v)}>
+          <SelectTrigger className="w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {periodOptions.map(opt => (
+              <SelectItem key={opt.key} value={opt.key}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -222,7 +221,7 @@ export default function DashboardChart() {
       ) : (
         <div className="h-[280px] sm:h-[300px] overflow-visible">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={2} margin={{ bottom: 20, left: 0, right: 8 }}>
+            <BarChart data={chartData} barGap={2} margin={{ bottom: 24, left: 0, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="label"

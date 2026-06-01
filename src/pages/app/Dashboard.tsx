@@ -70,9 +70,10 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 stat-card">
-          <div className="flex items-center justify-between mb-4">
+      <DashboardChart />
+
+      <div className="stat-card">
+        <div className="flex items-center justify-between mb-4">
             <div>
               <div className="label-eyebrow">Recente facturen</div>
               <h2 className="font-serif text-xl mt-1">Laatste activiteit</h2>
@@ -102,9 +103,6 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-
-        <DashboardChart />
-      </div>
     </div>
   );
 }
