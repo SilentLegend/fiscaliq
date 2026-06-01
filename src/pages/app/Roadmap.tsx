@@ -29,6 +29,7 @@ const items: Item[] = [
   { title: "Verwijder knop met confirm", description: "Confirm + verwijder uit DB met toast feedback", phase: "nu", status: "klaar" },
   { title: "PDF-export facturen", description: "5 templates (klassiek/modern/minimaal/compact/kleurrijk) met html2pdf.js", phase: "nu", status: "klaar" },
   { title: "Template keuze in Instellingen", description: "Kaartpreview, full dialog preview, localStorage persistente selectie", phase: "nu", status: "klaar" },
+  { title: "Sidebar sluit na navigatie (mobiel)", description: "Menu verdwijnt bij tikken op item ipv handmatig sluiten", phase: "nu", status: "klaar" },
   { title: "E-mail facturen verzenden", description: "Facturen direct naar klanten mailen via Resend", phase: "binnenkort", status: "gepland" },
   { title: "BTW-aangifte export (XML)", description: "XML voor upload naar Belastingdienst", phase: "binnenkort", status: "gepland" },
   { title: "Jaaroverzicht / boekhouder export", description: "CSV + ZIP met alle PDFs voor de boekhouder", phase: "binnenkort", status: "gepland" },
