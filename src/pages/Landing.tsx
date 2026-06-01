@@ -6,7 +6,7 @@ const features = [
   { title: "Facturen zonder gedoe", body: "Maak offertes, zet ze om naar facturen en stuur herinneringen vanuit één rustige flow." },
   { title: "Bonnetjes en kosten", body: "Upload bonnetjes, categoriseer kosten en houd grip op je administratie zonder losse tools." },
   { title: "BTW overzicht", body: "Zie direct wat je moet reserveren en werk rustig toe naar je kwartaal-aangifte." },
-  { title: "Bankkoppeling klaar", body: "Voorbereid op PSD2-koppelingen en automatische matching van transacties met facturen." },
+  { title: "Transacties importeren", body: "Upload CSV van je bank (ABN, ING, Rabobank, Bunq) — veilig verwerkt, nergens opgeslagen." },
 ];
 
 export default function Landing() {
@@ -52,7 +52,7 @@ export default function Landing() {
             </Button>
           </div>
           <div className="mt-8 flex flex-wrap gap-2">
-            {["Facturen & offertes","BTW-overzicht","Bonnetjes","Bankkoppeling voorbereid"].map(t => (
+            {["Facturen & offertes","BTW-overzicht","Bonnetjes","CSV-import"].map(t => (
               <span key={t} className="px-3 py-1.5 rounded-full bg-muted text-xs text-muted-foreground">{t}</span>
             ))}
           </div>
@@ -117,16 +117,19 @@ export default function Landing() {
           <h2 className="mt-3 font-serif text-3xl md:text-4xl">Eén plan. Alles inbegrepen.</h2>
           <div className="mt-10 rounded-2xl border border-border bg-card p-8 text-left">
             <div className="flex items-baseline gap-2">
-              <span className="font-serif text-5xl">€ 12</span>
+              <span className="font-serif text-5xl">€ 7,99</span>
               <span className="text-muted-foreground">/ maand, excl. BTW</span>
             </div>
-            <ul className="mt-6 space-y-2.5 text-sm">
-              {["Onbeperkt facturen & offertes","BTW-aangifte assistent","Bonnetjes uploaden","Bankkoppeling (zodra beschikbaar in jouw bank)","E-mail support"].map(x =>
+            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft text-primary text-xs font-medium">
+              Eerste 2 maanden gratis
+            </div>
+            <ul className="mt-4 space-y-2.5 text-sm">
+              {["Onbeperkt facturen & offertes","BTW-aangifte assistent","Bonnetjes uploaden","CSV-transacties importeren","E-mail factureren","E-mail support"].map(x =>
                 <li key={x} className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> {x}</li>
               )}
             </ul>
             <Button asChild size="lg" className="w-full mt-8">
-              <Link to="/auth?mode=signup">Begin nu — 14 dagen gratis</Link>
+              <Link to="/auth?mode=signup">Begin nu — eerste 2 maanden gratis</Link>
             </Button>
           </div>
         </div>
@@ -136,7 +139,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-4 text-sm text-muted-foreground">
           <div>© {new Date().getFullYear()} Fiscaliq</div>
           <div className="flex gap-6">
-            <a href="#">Privacy</a><a href="#">Voorwaarden</a><a href="#">Contact</a>
+            <Link to="/privacy">Privacy</Link><Link to="/terms">Voorwaarden</Link>
           </div>
         </div>
       </footer>
