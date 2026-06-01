@@ -112,4 +112,7 @@
   .label-eyebrow {
     @apply text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground;
   }
+  .recharts-surface {
+    overflow: visible;
+  }
 }

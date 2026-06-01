@@ -191,17 +191,17 @@ export default function DashboardChart() {
 
   return (
     <div className="stat-card">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
         <div>
           <div className="label-eyebrow">Grafiek</div>
-          <h2 className="font-serif text-xl mt-1">Omzet & uitgaven</h2>
+          <h2 className="font-serif text-xl mt-1">Omzet &amp; uitgaven</h2>
         </div>
         <div className="flex gap-1">
           {periodOptions.map(opt => (
             <button
               key={opt.key}
               onClick={() => setPeriod(opt.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 period === opt.key
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted"
@@ -220,9 +220,9 @@ export default function DashboardChart() {
           Nog geen data voor deze periode
         </div>
       ) : (
-        <div className="h-[280px] overflow-visible">
+        <div className="h-[280px] sm:h-[300px] overflow-visible">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={2} margin={{ bottom: 40, left: -10, right: 8 }}>
+            <BarChart data={chartData} barGap={2} margin={{ bottom: 20, left: 0, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="label"
