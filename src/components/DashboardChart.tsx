@@ -220,9 +220,9 @@ export default function DashboardChart() {
           Nog geen data voor deze periode
         </div>
       ) : (
-        <div className="h-[250px]">
+        <div className="h-[280px] overflow-visible">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={2} margin={{ bottom: chartData.length > 10 ? 36 : 12 }}>
+            <BarChart data={chartData} barGap={2} margin={{ bottom: 40, left: -10, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="label"
