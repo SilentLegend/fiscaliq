@@ -18,15 +18,17 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const { user, signOut } = useAuth();
   const loc = useLocation();
 
+  const close = () => setOpenMobile(false);
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="px-4 py-5">
-        <NavLink to="/app" className="flex items-center gap-2.5">
+        <NavLink to="/app" onClick={close} className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground grid place-items-center font-serif text-lg">F</div>
           {!collapsed && (
             <div className="leading-tight">
@@ -46,7 +48,7 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={it.url}>
                     <SidebarMenuButton asChild className={active ? "bg-primary-soft text-primary font-medium" : ""}>
-                      <NavLink to={it.url} end={it.end}>
+                      <NavLink to={it.url} end={it.end} onClick={close}>
                         <it.icon className="h-4 w-4" />
                         {!collapsed && <span>{it.title}</span>}
                       </NavLink>
@@ -60,7 +62,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-3 space-y-1">
         <SidebarMenuButton asChild>
-          <NavLink to="/app/instellingen" className={loc.pathname.startsWith("/app/instellingen") ? "bg-primary-soft text-primary" : ""}>
+          <NavLink to="/app/instellingen" onClick={close} className={loc.pathname.startsWith("/app/instellingen") ? "bg-primary-soft text-primary" : ""}>
             <Settings className="h-4 w-4" />
             {!collapsed && <span>Instellingen</span>}
           </NavLink>
