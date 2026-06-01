@@ -222,13 +222,14 @@ export default function DashboardChart() {
       ) : (
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={2}>
+            <BarChart data={chartData} barGap={2} margin={{ bottom: chartData.length > 10 ? 36 : 12 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={{ stroke: "hsl(var(--border))" }}
                 tickLine={false}
+                interval={chartData.length > 8 ? "preserveStartEnd" : 0}
               />
               <YAxis
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
