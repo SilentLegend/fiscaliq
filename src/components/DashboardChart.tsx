@@ -251,8 +251,8 @@ export default function DashboardChart() {
                 }}
                 cursor={{ fill: "hsl(var(--primary-soft))", opacity: 0.5 }}
               />
-              <Bar dataKey="Omzet" fill="hsl(145 50% 35%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Uitgaven" fill="hsl(0 65% 45%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Omzet" fill="hsl(var(--chart-revenue))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Uitgaven" fill="hsl(var(--chart-expenses))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

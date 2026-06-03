@@ -1,7 +1,7 @@
 # Fiscaliq — Project Context
 
 > Persoonlijke boekhouding voor Nederlandse ZZP'ers.
-> Gebouwd met Lovable + Supabase (via Lovable Cloud).
+> Gebouwd met Vite + React + Supabase. Gedeployed via Vercel.
 
 ---
 
@@ -23,7 +23,7 @@ geen abonnementsdruk zoals MoneyMonk. Focus op:
 ```
 Frontend  →  React 18 + Vite + TypeScript + TailwindCSS + shadcn/ui
 State     →  TanStack Query (React Query)
-Backend   →  Supabase (via Lovable Cloud)
+Backend   →  Supabase
               - Postgres database met RLS
               - Auth (email/wachtwoord)
               - Storage bucket 'receipts' voor bonnetjes
@@ -40,7 +40,7 @@ Deploy    →  Vercel (via GitHub sync)
 | `invoices`           | Facturen met status (concept/verzonden/betaald/...) |
 | `invoice_items`      | Regels per factuur                                  |
 | `expenses`           | Bonnetjes/uitgaven met BTW                          |
-| `bank_connections`   | PSD2-bankkoppelingen (GoCardless)                   |
+| `bank_connections`   | PSD2-bankkoppelingen (Enable Banking)               |
 | `bank_transactions`  | Geïmporteerde banktransacties                       |
 | `transaction_matches`| Koppeling transactie ↔ factuur/bon                 |
 | `roadmap_items`      | Persoonlijke project-roadmap                        |
@@ -68,8 +68,17 @@ Alle tabellen hebben **Row-Level Security**: je ziet alleen je eigen data.
 - [x] Dashboard met KPI's (omzet maand, openstaand, BTW-reservering)
 
 ### Bank
-- [x] Bank-pagina UI met "demo"-koppeling (handmatige IBAN + sample transacties)
-- [x] Edge function `bank-connect` als skeleton voor GoCardless PSD2
+- [x] Bank-pagina UI met demo-koppeling (handmatige IBAN + sample transacties)
+- [x] CSV import edge function (5 formaten, drag & drop, rate limiting)
+- [x] CSV import frontend helper
+- [x] Auto-matching: transactie ↔ factuur (op bedrag, factuurnummer, klantnaam)
+- [x] Individuele match knop per transactie
+- [x] Automatische matching na CSV import
+
+### Verkoop
+- [x] Factuur-PDF export (5 templates: klassiek, modern, minimaal, compact, kleurrijk)
+- [x] E-mail factuur versturen (Resend + SMTP ondersteuning)
+- [x] Automatisch op "betaald" bij matching
 
 ### Project-management
 - [x] Persoonlijke roadmap-tool in de app
@@ -81,10 +90,9 @@ Alle tabellen hebben **Row-Level Security**: je ziet alleen je eigen data.
 ## 🚧 Wat staat op de roadmap
 
 ### Hoge prioriteit
+- [x] **Auto-matching** banktransactie ↔ factuur (op bedrag + factuurnummer + klantnaam)
 - [ ] **PDF-export voor facturen** (jsPDF of html2pdf) — kunnen versturen via mail
 - [ ] **E-mail versturen** vanuit de app (factuur direct naar klant via Resend)
-- [ ] **GoCardless PSD2 echt aansluiten** — institutions, requisitions, fetch transactions
-- [ ] **Auto-matching** banktransactie ↔ factuur (op IBAN + bedrag + referentie)
 
 ### Medium
 - [ ] Recurring/abonnement-facturen (maandelijkse herhaling)
@@ -105,12 +113,10 @@ Alle tabellen hebben **Row-Level Security**: je ziet alleen je eigen data.
 
 ## 🔐 Secrets / environment
 
-Runtime secrets in Lovable Cloud (al geconfigureerd):
+Runtime secrets in Supabase (al geconfigureerd):
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (auto)
-- `LOVABLE_API_KEY` (voor AI-features)
 
 Nog toevoegen voor productie:
-- `GOCARDLESS_SECRET_ID` + `GOCARDLESS_SECRET_KEY` (voor PSD2)
 - `RESEND_API_KEY` (voor e-mail versturen)
 - `MOLLIE_API_KEY` (voor klant-betalingen)
 

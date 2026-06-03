@@ -39,6 +39,9 @@
     --warning: 35 85% 55%;
     --info: 210 60% 45%;
 
+    --chart-revenue: 145 50% 35%;
+    --chart-expenses: 0 65% 45%;
+
     --border: 42 15% 88%;
     --input: 42 15% 88%;
     --ring: 174 72% 18%;
@@ -76,6 +79,9 @@
     --accent-foreground: 174 55% 75%;
     --destructive: 0 60% 50%;
     --destructive-foreground: 42 33% 96%;
+
+    --chart-revenue: 145 55% 55%;
+    --chart-expenses: 0 65% 60%;
     --border: 180 15% 16%;
     --input: 180 15% 16%;
     --ring: 174 55% 55%;
